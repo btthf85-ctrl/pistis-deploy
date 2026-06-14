@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#050316" />
+<meta name="robots" content="noindex" />
+<title>Página no encontrada — Pistis Sophia Core</title>
+<link rel="icon" type="image/png" href="/assets/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Outfit:wght@300..600&family=JetBrains+Mono:wght@400..600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --navy:#050316; --violet:#7c3aed; --violet-bright:#a855f7; --aqua:#22d3ee;
+    --gold:#f0c244; --paper:#f5f3ff; --paper-mute:#94a3b8; --line:rgba(167,139,250,0.2);
+    --font-display:'Fraunces',Georgia,serif; --font-body:'Outfit',sans-serif; --font-mono:'JetBrains Mono',monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.15), transparent 55%),
+      linear-gradient(180deg, #050316, #0a0820);
+    color:var(--paper); font-family:var(--font-body); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:2rem; text-align:center;
+  }
+  .box { max-width:520px; }
+  .symbol { width:110px; height:auto; aspect-ratio:431/520; margin:0 auto 1.8rem;
+    background:url('/assets/logo-symbol.webp') center/contain no-repeat;
+    filter:drop-shadow(0 0 28px rgba(124,58,237,0.55)); animation:float 6s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .code { font-family:var(--font-mono); font-size:0.74rem; letter-spacing:0.3em; color:var(--aqua); margin-bottom:1rem; }
+  .code::before { content:"✦ "; color:var(--gold); }
+  h1 { font-family:var(--font-display); font-weight:400; font-size:clamp(1.8rem,5vw,2.6rem); line-height:1.15; margin-bottom:1rem; }
+  h1 em { font-style:italic; background:linear-gradient(110deg,var(--gold),var(--violet-bright));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  p { color:var(--paper-mute); margin-bottom:2rem; line-height:1.6; }
+  .btns { display:flex; gap:0.8rem; justify-content:center; flex-wrap:wrap; }
+  .btn { display:inline-block; text-decoration:none; padding:0.85rem 1.7rem; border-radius:999px; font-weight:600; font-size:0.95rem; transition:transform .25s; }
+  .btn:hover { transform:translateY(-2px); }
+  .btn-primary { background:linear-gradient(120deg,var(--violet),var(--aqua)); color:#fff; box-shadow:0 12px 34px -12px rgba(124,58,237,0.6); }
+  .btn-ghost { border:1px solid var(--line); color:var(--paper); }
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="symbol" role="img" aria-label="Pistis Sophia Core"></div>
+    <div class="code">Error 404</div>
+    <h1>Esta órbita está <em>vacía</em>.</h1>
+    <p>La página que buscas no existe o fue movida. Regresa al inicio o explora el directorio de entidades analizadas.</p>
+    <div class="btns">
+      <a class="btn btn-primary" href="/">Volver al inicio</a>
+      <a class="btn btn-ghost" href="/directorio-geo/">Directorio GEO</a>
+    </div>
+  </div>
+</body>
+</html>

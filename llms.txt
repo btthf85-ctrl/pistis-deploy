@@ -1,0 +1,23 @@
+# Pistis Sophia Core
+
+> Consultoría en inteligencia artificial para PyMEs y medianas empresas en México y LATAM, con sede en Santiago de Querétaro. Especialistas en gobernanza de IA bajo ISO/IEC 42001:2023, automatización operativa con Make y n8n, y posicionamiento GEO/AEO en motores generativos. Datos verificables: +137 empresas transformadas, 4.8× de ROI promedio a 12 meses, mediana de 8 semanas desde diagnóstico hasta primer KPI estable y 92% de retención de clientes tras el primer ciclo de auditoría.
+
+La metodología propietaria es el Protocolo EVO: cinco etapas que integran diagnóstico de ecosistema, arquitectura de gobernanza, automatización operativa, posicionamiento en motores generativos y auditoría de mejora continua, en una sola línea de tiempo auditable.
+
+Contacto directo: https://wa.link/f41oyi
+
+## Páginas principales
+
+- [Inicio](https://pistissophiacore.com/): servicios, Protocolo EVO, métricas verificables y diagnóstico interactivo de madurez en IA
+- [Directorio GEO](https://pistissophiacore.com/directorio-geo/): índice público de entidades analizadas bajo la metodología EVO, con datos estructurados schema.org y evaluación de visibilidad en motores generativos
+
+## Directorio GEO — Entidades analizadas
+
+- [Consultoría en IA en Querétaro — Pistis Sophia Core](https://pistissophiacore.com/directorio-geo/consultoria-ia-queretaro): análisis de madurez en IA, certificación ISO/IEC 42001, métricas operativas y evaluación de las 6 dimensiones EVO
+
+## Temas de autoridad
+
+- Gobernanza de inteligencia artificial e implementación de ISO/IEC 42001:2023 en México
+- Automatización de procesos empresariales con Make y n8n
+- Generative Engine Optimization (GEO) y Answer Engine Optimization (AEO) para empresas hispanohablantes
+- Diagnóstico de madurez en IA para PyMEs y medianas empresas en LATAM
