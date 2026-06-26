@@ -3904,11 +3904,10 @@
 
     // ════════════════════════════════════════════════════════════
     // N8N WEBHOOK CONFIGURATION
-    // Replace this URL with your n8n webhook URL once deployed.
-    // Format: https://your-n8n-instance.com/webhook/evo-quiz-lead
-    // Workflow JSON: n8n-evo-quiz-workflow.json
+    // Instancia auto-hospedada de Pistis Sophia Core
+    // Workflow: PSC 1 — Captura de Leads (Quiz EVO)
     // ════════════════════════════════════════════════════════════
-    const N8N_WEBHOOK_URL = 'https://your-n8n-instance.com/webhook/evo-quiz-lead';
+    const N8N_WEBHOOK_URL = 'https://n8n-po5n.srv1769442.hstgr.cloud/webhook/evo-quiz-lead';
 
     function openPaywall() {
       if (quizState.unlocked) return;
@@ -4072,6 +4071,26 @@
           ts: new Date().toISOString()
         }));
       } catch (e) { /* sessionStorage might be blocked, ignore */ }
+
+      // Capturar el lead en n8n (no bloqueante) ANTES de ir a Mercado Pago.
+      // Usamos keepalive para que la petición se complete aunque la página
+      // se redirija de inmediato.
+      try {
+        fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: payName.value.trim(),
+            email: payEmail.value.trim().toLowerCase(),
+            company: payCompany.value.trim(),
+            score: quizState.total,
+            tier: (quizState.tier || '').replace('TIER · ', '').trim(),
+            timestamp: new Date().toISOString(),
+            source: 'pistissophiacore.com/quiz'
+          }),
+          keepalive: true
+        }).catch(() => { /* best-effort, no bloquea el pago */ });
+      } catch (e) { /* ignore */ }
 
       // Redirect to Mercado Pago
       window.location.href = 'https://mpago.la/2RqZXgJ';
