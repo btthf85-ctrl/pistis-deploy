@@ -277,20 +277,22 @@
   'use strict';
 
   // ════════════════════════════════════════════════════════════
-  // CONFIGURACIÓN — Reemplaza con tu URL de webhook de n8n
-  // El workflow correspondiente es: n8n-pago-entrega-pdf.json
+  // CONFIGURACIÓN — Webhook de n8n para entrega del PDF tras pago confirmado.
+  // Workflow correspondiente: PSC 2 — Entrega de PDF (Gemini + PDFShift)
   // ════════════════════════════════════════════════════════════
-  const N8N_WEBHOOK_URL = 'https://your-n8n-instance.com/webhook/pago-exitoso';
+  const N8N_WEBHOOK_URL = 'https://n8n-po5n.srv1769442.hstgr.cloud/webhook/pago-exitoso';
 
   const statusDesc = document.getElementById('status-desc');
 
-  // Recuperar los datos del cliente guardados antes del pago
+  // Recuperar los datos del cliente guardados antes del pago.
+  // Usamos localStorage (no sessionStorage) porque Mercado Pago abre esta
+  // página en un contexto nuevo y sessionStorage no sobrevive la redirección.
   let lead = null;
   try {
-    const raw = sessionStorage.getItem('psc_lead');
+    const raw = localStorage.getItem('psc_lead') || sessionStorage.getItem('psc_lead');
     if (raw) lead = JSON.parse(raw);
   } catch (e) {
-    console.warn('No se pudo leer sessionStorage:', e);
+    console.warn('No se pudo leer el almacenamiento local:', e);
   }
 
   async function enviarInforme() {
@@ -316,8 +318,8 @@
 
       if (response.ok) {
         statusDesc.innerHTML = '✓ ¡Listo! Tu informe fue enviado a <strong>' + lead.email + '</strong>. Revisa tu bandeja de entrada (y spam).';
-        // Limpiar los datos ya usados
-        try { sessionStorage.removeItem('psc_lead'); } catch (e) {}
+        // Limpiar los datos ya usados de ambos almacenamientos
+        try { localStorage.removeItem('psc_lead'); sessionStorage.removeItem('psc_lead'); } catch (e) {}
       } else {
         statusDesc.innerHTML = 'Tu pago fue exitoso. Si no recibes el informe en unos minutos, escríbenos por WhatsApp.';
       }

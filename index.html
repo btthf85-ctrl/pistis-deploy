@@ -4130,17 +4130,21 @@
       // Validate the form fields first
       if (!validateForm()) return;
 
-      // Save the lead snapshot to sessionStorage so activar.html can prefill
+      // Guardar los datos del lead para que gracias.html los recupere tras el pago.
+      // Usamos localStorage porque Mercado Pago abre gracias.html en un contexto
+      // nuevo donde sessionStorage no sobrevive. Guardamos en ambos por seguridad.
       try {
-        sessionStorage.setItem('psc_lead', JSON.stringify({
+        const leadSnapshot = JSON.stringify({
           name: payName.value.trim(),
           email: payEmail.value.trim().toLowerCase(),
           company: payCompany.value.trim(),
           score: (quizState && quizState.total) || null,
           tier: (quizState && quizState.tier) || null,
           ts: new Date().toISOString()
-        }));
-      } catch (e) { /* sessionStorage might be blocked, ignore */ }
+        });
+        localStorage.setItem('psc_lead', leadSnapshot);
+        sessionStorage.setItem('psc_lead', leadSnapshot);
+      } catch (e) { /* el almacenamiento puede estar bloqueado, ignorar */ }
 
       // Capturar el lead en n8n (no bloqueante) ANTES de ir a Mercado Pago.
       // Usamos keepalive para que la petición se complete aunque la página
