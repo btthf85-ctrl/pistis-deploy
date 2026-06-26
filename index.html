@@ -113,7 +113,7 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; }
-  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: hidden; width: 100%; }
   body {
     margin: 0;
     font-family: var(--font-body);
@@ -121,6 +121,9 @@
     color: var(--paper);
     line-height: 1.55;
     overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
@@ -264,7 +267,7 @@
   #liquid-bg {
     position: fixed;
     inset: 0;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     z-index: -2;
     pointer-events: none;
@@ -2170,6 +2173,73 @@
       max-width: none;
       bottom: calc(1rem + 90px);
     }
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     CORRECCIONES RESPONSIVE MÓVIL — overflow horizontal + paywall
+     ═══════════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    /* Contener cualquier elemento decorativo que se desborde */
+    .solar-wrap, .solar-hint, .quiz-aura, #floating-cube-wrap {
+      max-width: 100vw;
+    }
+    /* El sol y su contenedor no deben empujar el ancho */
+    .solar-wrap { overflow: visible; }
+    .solar-hint {
+      max-width: calc(100vw - 2rem);
+      white-space: normal;
+      text-align: center;
+    }
+    /* El cubo flotante: asegurar que quede dentro */
+    #floating-cube-wrap {
+      right: 0.75rem !important;
+      max-width: 90px;
+    }
+    /* Cualquier sección no debe exceder el ancho de pantalla */
+    section, .hero, nav, header, footer, main, div[class] {
+      max-width: 100vw;
+    }
+  }
+
+  @media (max-width: 540px) {
+    /* ── PAYWALL RESPONSIVE ── */
+    .paywall-overlay { padding: 0.75rem; align-items: flex-start; }
+    .paywall-card {
+      width: 100%;
+      max-width: 100%;
+      max-height: 94vh;
+      padding: 1.5rem 1.25rem;
+      border-radius: 20px;
+      margin: 0.5rem 0;
+    }
+    .paywall-card h3 { font-size: 1.5rem !important; }
+    .paywall-card .pay-subtitle { font-size: 0.92rem !important; }
+    /* Las preguntas: menos padding lateral */
+    .pay-question { gap: 0.7rem; padding: 1rem 0; }
+    .pay-q-text { font-size: 0.92rem !important; }
+    /* Countdown: que los dígitos no se salgan */
+    .countdown-digit {
+      font-size: clamp(2.2rem, 12vw, 3rem) !important;
+      padding: 0.25rem 0.4rem !important;
+      min-width: 1.8ch !important;
+    }
+    .countdown-sep { font-size: clamp(1.8rem, 9vw, 2.4rem) !important; }
+    /* Bloque de precio */
+    .pay-price-stack { padding: 1.1rem 1.2rem; }
+    .pay-price .amount { font-size: clamp(2.4rem, 13vw, 3rem) !important; }
+    /* Formulario del paywall */
+    .pay-form input { font-size: 16px !important; } /* evita zoom en iOS */
+    /* Botón de pago */
+    .pay-actions .pay-btn { padding: 0.9rem 1.2rem; font-size: 0.95rem; }
+    /* Beneficios */
+    .pay-benefits li { padding: 0.8rem 0; }
+  }
+
+  /* Pantallas muy estrechas (≤380px) */
+  @media (max-width: 380px) {
+    .paywall-card { padding: 1.25rem 1rem; }
+    .paywall-card h3 { font-size: 1.35rem !important; }
+    .countdown-digit { font-size: 2rem !important; }
   }
 </style>
 </head>
