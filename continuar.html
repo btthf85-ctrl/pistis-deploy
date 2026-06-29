@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#050316" />
+<meta name="robots" content="noindex, nofollow" />
+<title>¡Ya casi! Completa tu perfil GEO — Pistis Sophia Core</title>
+<link rel="icon" type="image/png" href="/assets/favicon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&family=Outfit:wght@300..600&family=JetBrains+Mono:wght@400..600&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --void: #050316;
+    --void-2: #0a0820;
+    --void-3: #110a2e;
+    --violet: #7c3aed;
+    --violet-bright: #a855f7;
+    --violet-soft: #c4b5fd;
+    --aqua: #06b6d4;
+    --aqua-bright: #22d3ee;
+    --aqua-soft: #67e8f9;
+    --gold: #f0c244;
+    --gold-soft: #fde68a;
+    --paper: #f5f3ff;
+    --paper-dim: #cbd5e1;
+    --paper-mute: #94a3b8;
+    --line: rgba(167, 139, 250, 0.14);
+    --line-strong: rgba(167, 139, 250, 0.32);
+    --font-display: "Fraunces", "Times New Roman", serif;
+    --font-body: "Outfit", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--void);
+    color: var(--paper);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2.5rem 1.5rem 4rem;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* Fondo idéntico al sitio principal */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(124, 58, 237, 0.18), transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(6, 182, 212, 0.12), transparent 50%),
+      var(--void);
+    z-index: -3;
+  }
+  /* Grano sutil de luz superior */
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 120%; height: 400px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(168, 85, 247, 0.1), transparent 70%);
+    z-index: -2;
+    pointer-events: none;
+  }
+
+  .wrap {
+    max-width: 620px;
+    width: 100%;
+    animation: rise 0.7s var(--ease-out);
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Progreso */
+  .progress-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+  .step-badge {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--aqua-bright);
+    border: 1px solid var(--line-strong);
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(167, 139, 250, 0.12);
+    border-radius: 999px;
+    margin-left: 1.25rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 75%;
+    background: linear-gradient(90deg, var(--violet), var(--aqua-bright));
+    border-radius: 999px;
+    box-shadow: 0 0 16px rgba(124, 58, 237, 0.5);
+  }
+
+  /* Encabezado */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 6vw, 2.9rem);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  h1 em {
+    font-style: italic;
+    background: linear-gradient(110deg, var(--gold), var(--violet-bright));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .lede {
+    font-size: 1.08rem;
+    line-height: 1.6;
+    color: var(--paper-dim);
+    margin-bottom: 2.5rem;
+    max-width: 90%;
+  }
+  .lede strong { color: var(--paper); font-weight: 600; }
+
+  /* Formulario */
+  .form-card {
+    background: linear-gradient(160deg, rgba(20, 12, 50, 0.7), rgba(10, 8, 32, 0.85));
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 2.25rem;
+    box-shadow: 0 30px 80px -24px rgba(0, 0, 0, 0.6);
+  }
+  .field { margin-bottom: 1.6rem; }
+  .field:last-of-type { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--paper);
+    margin-bottom: 0.55rem;
+  }
+  .field .optional { color: var(--paper-mute); font-weight: 400; font-size: 0.85rem; }
+  .field .hint {
+    font-size: 0.83rem;
+    color: var(--paper-mute);
+    line-height: 1.45;
+    margin-top: 0.4rem;
+  }
+  .field .hint .ex {
+    color: var(--aqua-soft);
+    font-style: italic;
+  }
+  input[type="text"], input[type="url"], input[type="tel"], textarea {
+    width: 100%;
+    background: rgba(5, 3, 22, 0.6);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    color: var(--paper);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input::placeholder, textarea::placeholder { color: var(--paper-mute); opacity: 0.55; }
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--violet-bright);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
+  }
+  textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+  input.invalid, textarea.invalid {
+    border-color: #f87171;
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
+  }
+
+  .form-error {
+    color: #fca5a5;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    min-height: 1.2rem;
+  }
+
+  /* Botón */
+  .submit-btn {
+    width: 100%;
+    margin-top: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    background: linear-gradient(120deg, var(--violet), var(--violet-bright));
+    color: white;
+    border: none;
+    padding: 1.1rem 2rem;
+    border-radius: 14px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1.05rem;
+    cursor: pointer;
+    box-shadow: 0 16px 44px -14px rgba(124, 58, 237, 0.7);
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  }
+  .submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 54px -14px rgba(124, 58, 237, 0.85);
+  }
+  .submit-btn:disabled { opacity: 0.6; cursor: wait; }
+  .submit-btn svg { width: 18px; height: 18px; }
+
+  .reassure {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.82rem;
+    color: var(--paper-mute);
+    font-family: var(--font-mono);
+    letter-spacing: 0.03em;
+  }
+
+  .footer-note {
+    text-align: center;
+    margin-top: 2.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--paper-mute);
+  }
+
+  /* Overlay de envío */
+  .sending-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 3, 22, 0.92);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 100;
+    text-align: center;
+    padding: 2rem;
+  }
+  .sending-overlay.show { display: flex; }
+  .sending-spinner {
+    width: 56px; height: 56px;
+    border: 3px solid rgba(167, 139, 250, 0.2);
+    border-top-color: var(--aqua-bright);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 1.5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sending-overlay h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .sending-overlay p { color: var(--paper-mute); font-size: 0.95rem; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="progress-head">
+      <span class="step-badge">Paso 2 de 2</span>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+    </div>
+
+    <div class="eyebrow">✦ Pago confirmado</div>
+    <h1>¿Qué esperas? <em>¡Ya falta poco!</em></h1>
+    <p class="lede">
+      Tu pago se procesó con éxito. Ahora necesitamos unos datos clave de tu negocio para que la
+      <strong>Inteligencia Artificial entienda quién eres</strong> y empiece a recomendarte. Esto toma menos de 2 minutos.
+    </p>
+
+    <div class="form-card">
+      <div class="field">
+        <label for="giro">¿A qué se dedica tu negocio?</label>
+        <input type="text" id="giro" name="giro" placeholder="Ej. Clínica dental, Restaurante de mariscos, Despacho contable" required />
+        <div class="hint">Sé específico sobre tu giro o industria. <span class="ex">Ej. "Clínica dental especializada en ortodoncia"</span></div>
+      </div>
+
+      <div class="field">
+        <label for="ciudad">¿En qué ciudad operas principalmente?</label>
+        <input type="text" id="ciudad" name="ciudad" placeholder="Ej. Querétaro" required />
+        <div class="hint">La ciudad donde quieres que la IA te recomiende a clientes locales.</div>
+      </div>
+
+      <div class="field">
+        <label for="sitio">Tu sitio web <span class="optional">(opcional)</span></label>
+        <input type="url" id="sitio" name="sitio" placeholder="tunegocio.com" />
+        <div class="hint">Si tienes sitio, lo enlazamos a tu ficha de autoridad.</div>
+      </div>
+
+      <div class="field">
+        <label for="dato">¿Qué hace <em style="font-style:italic;">único</em> a tu negocio?</label>
+        <textarea id="dato" name="dato" placeholder="Ej. Única clínica en Querétaro con escáner intraoral 3D iTero y más de 5,000 tratamientos completados desde 2015." required></textarea>
+        <div class="hint">
+          Dato concreto y verificable: una cifra, una certificación, una tecnología, años de experiencia, algo medible.
+          <span class="ex">Evita frases genéricas como "los mejores" o "alta calidad" — la IA cita hechos, no adjetivos.</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="telefono">Teléfono de contacto <span class="optional">(opcional)</span></label>
+        <input type="tel" id="telefono" name="telefono" placeholder="442 123 4567" />
+        <div class="hint">Aparecerá en tu ficha para que los clientes te contacten directo.</div>
+      </div>
+
+      <div class="form-error" id="form-error" role="alert"></div>
+
+      <button class="submit-btn" id="submit-btn" type="button">
+        Generar mi presencia en IA
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </button>
+
+      <div class="reassure">🔒 Tus datos se procesan de forma segura y confidencial</div>
+    </div>
+
+    <div class="footer-note">PISTIS SOPHIA CORE · pistissophiacore.com</div>
+  </div>
+
+  <!-- Overlay mientras se procesa -->
+  <div class="sending-overlay" id="sending-overlay">
+    <div class="sending-spinner"></div>
+    <h2>Construyendo tu autoridad digital…</h2>
+    <p>Generando tu ficha optimizada para motores de IA</p>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ════════════════════════════════════════════════════════════
+  // CONFIGURACIÓN — Webhook del workflow PSC 3 (Directorio GEO)
+  // ════════════════════════════════════════════════════════════
+  const N8N_PSC3_URL = 'https://n8n-po5n.srv1769442.hstgr.cloud/webhook/nuevo-cliente-geo';
+  const PAGINA_GRACIAS = '/gracias.html';
+
+  // Recuperar los datos del cliente capturados antes del pago (del index).
+  // Usamos localStorage porque sobrevive la redirección de Mercado Pago.
+  let lead = {};
+  try {
+    const raw = localStorage.getItem('psc_lead') || sessionStorage.getItem('psc_lead');
+    if (raw) lead = JSON.parse(raw);
+  } catch (e) { console.warn('No se pudo leer el almacenamiento:', e); }
+
+  // Prefill: si el cliente ya dio su sitio web en el primer formulario, lo cargamos.
+  const sitioInput = document.getElementById('sitio');
+  if (lead.website && !sitioInput.value) {
+    sitioInput.value = lead.website;
+  }
+
+  const giro = document.getElementById('giro');
+  const ciudad = document.getElementById('ciudad');
+  const dato = document.getElementById('dato');
+  const telefono = document.getElementById('telefono');
+  const formError = document.getElementById('form-error');
+  const submitBtn = document.getElementById('submit-btn');
+  const overlay = document.getElementById('sending-overlay');
+
+  // Limpiar error al escribir
+  [giro, ciudad, sitioInput, dato, telefono].forEach(el => {
+    el.addEventListener('input', () => {
+      el.classList.remove('invalid');
+      formError.textContent = '';
+    });
+  });
+
+  function validar() {
+    let ok = true;
+    [giro, ciudad, dato].forEach(el => el.classList.remove('invalid'));
+
+    if (giro.value.trim().length < 3) { giro.classList.add('invalid'); ok = false; }
+    if (ciudad.value.trim().length < 2) { ciudad.classList.add('invalid'); ok = false; }
+    if (dato.value.trim().length < 15) { dato.classList.add('invalid'); ok = false; }
+
+    if (!ok) {
+      formError.textContent = 'Por favor completa el giro, la ciudad y un dato específico de tu negocio (mínimo unas palabras).';
+    }
+    return ok;
+  }
+
+  submitBtn.addEventListener('click', async () => {
+    if (!validar()) return;
+
+    // Construir el payload con el formato exacto que PSC 3 espera:
+    // nombre, nicho, ciudad, url, dato, telefono
+    const payload = {
+      nombre: lead.company || lead.name || 'Empresa',
+      nicho: giro.value.trim(),
+      ciudad: ciudad.value.trim(),
+      url: (sitioInput.value.trim() || lead.website || ''),
+      dato: dato.value.trim(),
+      telefono: telefono.value.trim(),
+      // Datos extra de contexto (por si PSC 3 los aprovecha a futuro)
+      email: lead.email || '',
+      contacto: lead.name || ''
+    };
+
+    // Mostrar overlay de carga
+    submitBtn.disabled = true;
+    overlay.classList.add('show');
+
+    try {
+      const resp = await fetch(N8N_PSC3_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      // Tanto si responde OK como si tarda, limpiamos y vamos a gracias.
+      // PSC 3 sigue procesando en segundo plano aunque el usuario avance.
+      try {
+        localStorage.removeItem('psc_lead');
+        sessionStorage.removeItem('psc_lead');
+      } catch (e) {}
+
+      // Redirigir a la página de gracias (cierre del proceso)
+      window.location.href = PAGINA_GRACIAS;
+
+    } catch (err) {
+      console.error('Error al enviar a PSC 3:', err);
+      // Aun si falla la red, el cliente ya pagó: lo mandamos a gracias igual,
+      // y tú podrás generar la ficha manualmente si hiciera falta.
+      window.location.href = PAGINA_GRACIAS;
+    }
+  });
+})();
+</script>
+</body>
+</html>
