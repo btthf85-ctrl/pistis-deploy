@@ -2543,7 +2543,11 @@
         </div>
         <div class="pay-field">
           <label for="pay-company">Empresa</label>
-          <input type="text" id="pay-company" name="company" autocomplete="organization" placeholder="Tu empresa" />
+          <input type="text" id="pay-company" name="company" autocomplete="organization" placeholder="Tu empresa" required />
+        </div>
+        <div class="pay-field">
+          <label for="pay-website">Sitio web <span style="opacity:0.5;font-weight:400;">(opcional)</span></label>
+          <input type="text" id="pay-website" name="website" autocomplete="url" placeholder="tunegocio.com" />
         </div>
         <div class="pay-form-error" id="pay-form-error" role="alert"></div>
       </div>
@@ -3970,6 +3974,7 @@
     const payName = document.getElementById('pay-name');
     const payEmail = document.getElementById('pay-email');
     const payCompany = document.getElementById('pay-company');
+    const payWebsite = document.getElementById('pay-website');
     const payFormError = document.getElementById('pay-form-error');
 
     // ════════════════════════════════════════════════════════════
@@ -3987,7 +3992,7 @@
       document.body.style.overflow = 'hidden';
       // Reset form state
       payFormError.textContent = '';
-      [payName, payEmail, payCompany].forEach(el => el.classList.remove('invalid'));
+      [payName, payEmail, payCompany, payWebsite].forEach(el => el.classList.remove('invalid'));
       // Start the 10-minute countdown each time the paywall opens
       startCountdown(10 * 60);
     }
@@ -4044,7 +4049,7 @@
     });
 
     // Clear invalid state as user types
-    [payName, payEmail, payCompany].forEach(el => {
+    [payName, payEmail, payCompany, payWebsite].forEach(el => {
       el.addEventListener('input', () => {
         el.classList.remove('invalid');
         payFormError.textContent = '';
@@ -4055,6 +4060,7 @@
       let valid = true;
       const name = payName.value.trim();
       const email = payEmail.value.trim();
+      const company = payCompany.value.trim();
 
       if (name.length < 2) {
         payName.classList.add('invalid');
@@ -4065,8 +4071,12 @@
         payEmail.classList.add('invalid');
         valid = false;
       }
+      if (company.length < 2) {
+        payCompany.classList.add('invalid');
+        valid = false;
+      }
       if (!valid) {
-        payFormError.textContent = 'Por favor completa tu nombre y un email válido.';
+        payFormError.textContent = 'Por favor completa tu nombre, un email válido y el nombre de tu empresa.';
       }
       return valid;
     }
@@ -4126,48 +4136,71 @@
     // 6. Eso dispara n8n que genera la ficha del directorio con sameAs
     //    apuntando a la URL del cliente.
     // ════════════════════════════════════════════════════════════
-    payBtn.addEventListener('click', () => {
+    payBtn.addEventListener('click', async () => {
       // Validate the form fields first
       if (!validateForm()) return;
 
-      // Guardar los datos del lead para que gracias.html los recupere tras el pago.
-      // Usamos localStorage porque Mercado Pago abre gracias.html en un contexto
-      // nuevo donde sessionStorage no sobrevive. Guardamos en ambos por seguridad.
+      // URL del workflow PSC 0 que crea la preferencia de pago en Mercado Pago.
+      const N8N_CREAR_PREFERENCIA_URL = 'https://n8n-po5n.srv1769442.hstgr.cloud/webhook/crear-preferencia';
+
+      // Snapshot de los datos del cliente (respaldo para gracias.html).
+      const datosCliente = {
+        name: payName.value.trim(),
+        email: payEmail.value.trim().toLowerCase(),
+        company: payCompany.value.trim(),
+        website: payWebsite.value.trim(),
+        score: (quizState && quizState.total) || null,
+        tier: (quizState && quizState.tier || '').replace('TIER · ', '').trim()
+      };
+
+      // Guardar los datos para que gracias.html los recupere como respaldo.
       try {
-        const leadSnapshot = JSON.stringify({
-          name: payName.value.trim(),
-          email: payEmail.value.trim().toLowerCase(),
-          company: payCompany.value.trim(),
-          score: (quizState && quizState.total) || null,
-          tier: (quizState && quizState.tier) || null,
-          ts: new Date().toISOString()
-        });
+        const leadSnapshot = JSON.stringify({ ...datosCliente, ts: new Date().toISOString() });
         localStorage.setItem('psc_lead', leadSnapshot);
         sessionStorage.setItem('psc_lead', leadSnapshot);
-      } catch (e) { /* el almacenamiento puede estar bloqueado, ignorar */ }
+      } catch (e) { /* almacenamiento bloqueado, ignorar */ }
 
-      // Capturar el lead en n8n (no bloqueante) ANTES de ir a Mercado Pago.
-      // Usamos keepalive para que la petición se complete aunque la página
-      // se redirija de inmediato.
+      // Capturar el lead en PSC 1 (no bloqueante).
       try {
         fetch(N8N_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: payName.value.trim(),
-            email: payEmail.value.trim().toLowerCase(),
-            company: payCompany.value.trim(),
-            score: quizState.total,
-            tier: (quizState.tier || '').replace('TIER · ', '').trim(),
+            ...datosCliente,
             timestamp: new Date().toISOString(),
             source: 'pistissophiacore.com/quiz'
           }),
           keepalive: true
-        }).catch(() => { /* best-effort, no bloquea el pago */ });
+        }).catch(() => { /* best-effort */ });
       } catch (e) { /* ignore */ }
 
-      // Redirect to Mercado Pago
-      window.location.href = 'https://mpago.la/2RqZXgJ';
+      // Mostrar estado de carga mientras se genera el link de pago.
+      const btnTextoOriginal = payBtn.innerHTML;
+      payBtn.disabled = true;
+      payBtn.innerHTML = 'Generando pago seguro...';
+
+      // Pedir a PSC 0 que cree la preferencia de pago y devuelva el link único.
+      try {
+        const resp = await fetch(N8N_CREAR_PREFERENCIA_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datosCliente)
+        });
+
+        const data = await resp.json();
+
+        if (data && data.init_point) {
+          // Redirigir al checkout de Mercado Pago (link único con back_urls + notificación).
+          window.location.href = data.init_point;
+        } else {
+          throw new Error('Sin init_point en la respuesta');
+        }
+      } catch (err) {
+        console.error('Error al crear la preferencia de pago:', err);
+        payBtn.disabled = false;
+        payBtn.innerHTML = btnTextoOriginal;
+        payFormError.textContent = 'No pudimos iniciar el pago. Por favor intenta de nuevo o escríbenos por WhatsApp.';
+      }
     });
 
     /* ── FULL FLOW (re-enable when payment provider + n8n are ready) ──
