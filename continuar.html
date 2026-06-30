@@ -299,6 +299,12 @@
 
     <div class="form-card">
       <div class="field">
+        <label for="negocio">Nombre de tu negocio</label>
+        <input type="text" id="negocio" name="negocio" placeholder="Ej. Clínica Dental Sonrisa" required />
+        <div class="hint">Confirma el nombre con el que aparecerás en el directorio.</div>
+      </div>
+
+      <div class="field">
         <label for="giro">¿A qué se dedica tu negocio?</label>
         <input type="text" id="giro" name="giro" placeholder="Ej. Clínica dental, Restaurante de mariscos, Despacho contable" required />
         <div class="hint">Sé específico sobre tu giro o industria. <span class="ex">Ej. "Clínica dental especializada en ortodoncia"</span></div>
@@ -361,20 +367,58 @@
   const N8N_PSC3_URL = 'https://n8n-po5n.srv1769442.hstgr.cloud/webhook/nuevo-cliente-geo';
   const PAGINA_GRACIAS = '/gracias.html';
 
-  // Recuperar los datos del cliente capturados antes del pago (del index).
-  // Usamos localStorage porque sobrevive la redirección de Mercado Pago.
+  // Recuperar los datos del cliente. Estrategia robusta de 2 capas:
+  // 1) PRIMERO desde el external_reference que Mercado Pago devuelve en la URL
+  //    (esto SOBREVIVE el cambio de dominio durante el pago; es lo confiable).
+  // 2) Como respaldo, desde localStorage (por si la URL no trae los datos).
   let lead = {};
-  try {
-    const raw = localStorage.getItem('psc_lead') || sessionStorage.getItem('psc_lead');
-    if (raw) lead = JSON.parse(raw);
-  } catch (e) { console.warn('No se pudo leer el almacenamiento:', e); }
 
-  // Prefill: si el cliente ya dio su sitio web en el primer formulario, lo cargamos.
+  // Capa 1: leer external_reference de los parámetros de la URL que agrega MP.
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const extRef = params.get('external_reference');
+    if (extRef) {
+      const datos = JSON.parse(decodeURIComponent(extRef));
+      lead = {
+        name: datos.nombre || datos.name || '',
+        email: datos.email || '',
+        company: datos.empresa || datos.company || '',
+        website: datos.sitioWeb || datos.website || '',
+        score: datos.score != null ? datos.score : null,
+        tier: datos.tier || ''
+      };
+    }
+  } catch (e) { console.warn('No se pudo leer external_reference de la URL:', e); }
+
+  // Capa 2: respaldo desde localStorage si la URL no trajo datos completos.
+  if (!lead.email || !lead.company) {
+    try {
+      const raw = localStorage.getItem('psc_lead') || sessionStorage.getItem('psc_lead');
+      if (raw) {
+        const respaldo = JSON.parse(raw);
+        lead = {
+          name: lead.name || respaldo.name || '',
+          email: lead.email || respaldo.email || '',
+          company: lead.company || respaldo.company || '',
+          website: lead.website || respaldo.website || '',
+          score: lead.score != null ? lead.score : (respaldo.score != null ? respaldo.score : null),
+          tier: lead.tier || respaldo.tier || ''
+        };
+      }
+    } catch (e) { console.warn('No se pudo leer el almacenamiento:', e); }
+  }
+
+  // Prefill: cargar los datos que ya tenemos del cliente.
+  const negocioInput = document.getElementById('negocio');
   const sitioInput = document.getElementById('sitio');
+  if (lead.company && !negocioInput.value) {
+    negocioInput.value = lead.company;
+  }
   if (lead.website && !sitioInput.value) {
     sitioInput.value = lead.website;
   }
 
+  const negocio = document.getElementById('negocio');
   const giro = document.getElementById('giro');
   const ciudad = document.getElementById('ciudad');
   const dato = document.getElementById('dato');
@@ -384,7 +428,7 @@
   const overlay = document.getElementById('sending-overlay');
 
   // Limpiar error al escribir
-  [giro, ciudad, sitioInput, dato, telefono].forEach(el => {
+  [negocio, giro, ciudad, sitioInput, dato, telefono].forEach(el => {
     el.addEventListener('input', () => {
       el.classList.remove('invalid');
       formError.textContent = '';
@@ -393,14 +437,15 @@
 
   function validar() {
     let ok = true;
-    [giro, ciudad, dato].forEach(el => el.classList.remove('invalid'));
+    [negocio, giro, ciudad, dato].forEach(el => el.classList.remove('invalid'));
 
+    if (negocio.value.trim().length < 2) { negocio.classList.add('invalid'); ok = false; }
     if (giro.value.trim().length < 3) { giro.classList.add('invalid'); ok = false; }
     if (ciudad.value.trim().length < 2) { ciudad.classList.add('invalid'); ok = false; }
     if (dato.value.trim().length < 15) { dato.classList.add('invalid'); ok = false; }
 
     if (!ok) {
-      formError.textContent = 'Por favor completa el giro, la ciudad y un dato específico de tu negocio (mínimo unas palabras).';
+      formError.textContent = 'Por favor completa el nombre del negocio, el giro, la ciudad y un dato específico (mínimo unas palabras).';
     }
     return ok;
   }
@@ -411,7 +456,7 @@
     // Construir el payload con el formato exacto que PSC 3 espera:
     // nombre, nicho, ciudad, url, dato, telefono
     const payload = {
-      nombre: lead.company || lead.name || 'Empresa',
+      nombre: negocio.value.trim(),
       nicho: giro.value.trim(),
       ciudad: ciudad.value.trim(),
       url: (sitioInput.value.trim() || lead.website || ''),
