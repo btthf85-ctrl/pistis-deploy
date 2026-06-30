@@ -367,46 +367,42 @@
   const N8N_PSC3_URL = 'https://n8n-po5n.srv1769442.hstgr.cloud/webhook/nuevo-cliente-geo';
   const PAGINA_GRACIAS = '/gracias.html';
 
-  // Recuperar los datos del cliente. Estrategia robusta de 2 capas:
-  // 1) PRIMERO desde el external_reference que Mercado Pago devuelve en la URL
-  //    (esto SOBREVIVE el cambio de dominio durante el pago; es lo confiable).
-  // 2) Como respaldo, desde localStorage (por si la URL no trae los datos).
+  // Recuperar los datos del cliente. Estrategia robusta de 3 capas:
+  // 1) localStorage (lo más confiable en el mismo navegador).
+  // 2) external_reference que Mercado Pago devuelve en la URL.
+  // 3) payment_id de la URL (por si hay que consultar a MP).
   let lead = {};
 
-  // Capa 1: leer external_reference de los parámetros de la URL que agrega MP.
+  // Capa 1: localStorage / sessionStorage (sobrevive en el mismo navegador).
+  try {
+    const raw = localStorage.getItem('psc_lead') || sessionStorage.getItem('psc_lead');
+    if (raw) {
+      const d = JSON.parse(raw);
+      lead = {
+        name: d.name || '', email: d.email || '', company: d.company || '',
+        website: d.website || '', score: d.score != null ? d.score : null, tier: d.tier || ''
+      };
+    }
+  } catch (e) { console.warn('localStorage no disponible:', e); }
+
+  // Capa 2: external_reference de la URL (formato compacto: e,n,c,w,s,t).
   try {
     const params = new URLSearchParams(window.location.search);
     const extRef = params.get('external_reference');
-    if (extRef) {
-      const datos = JSON.parse(decodeURIComponent(extRef));
+    if (extRef && (!lead.email || !lead.company)) {
+      const d = JSON.parse(decodeURIComponent(extRef));
       lead = {
-        name: datos.nombre || datos.name || '',
-        email: datos.email || '',
-        company: datos.empresa || datos.company || '',
-        website: datos.sitioWeb || datos.website || '',
-        score: datos.score != null ? datos.score : null,
-        tier: datos.tier || ''
+        name: lead.name || d.n || '',
+        email: lead.email || d.e || '',
+        company: lead.company || d.c || '',
+        website: lead.website || d.w || '',
+        score: lead.score != null ? lead.score : (d.s != null ? d.s : null),
+        tier: lead.tier || d.t || ''
       };
     }
-  } catch (e) { console.warn('No se pudo leer external_reference de la URL:', e); }
-
-  // Capa 2: respaldo desde localStorage si la URL no trajo datos completos.
-  if (!lead.email || !lead.company) {
-    try {
-      const raw = localStorage.getItem('psc_lead') || sessionStorage.getItem('psc_lead');
-      if (raw) {
-        const respaldo = JSON.parse(raw);
-        lead = {
-          name: lead.name || respaldo.name || '',
-          email: lead.email || respaldo.email || '',
-          company: lead.company || respaldo.company || '',
-          website: lead.website || respaldo.website || '',
-          score: lead.score != null ? lead.score : (respaldo.score != null ? respaldo.score : null),
-          tier: lead.tier || respaldo.tier || ''
-        };
-      }
-    } catch (e) { console.warn('No se pudo leer el almacenamiento:', e); }
-  }
+    // Guardar el payment_id por si se necesita
+    window.PSC_PAYMENT_ID = params.get('payment_id') || params.get('collection_id') || '';
+  } catch (e) { console.warn('No se pudo leer external_reference:', e); }
 
   // Prefill: cargar los datos que ya tenemos del cliente.
   const negocioInput = document.getElementById('negocio');
