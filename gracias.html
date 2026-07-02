@@ -139,6 +139,49 @@
     margin-bottom: 2rem;
   }
 
+  /* Lo que adquiriste */
+  .includes {
+    text-align: left;
+    margin-bottom: 2rem;
+  }
+  .includes-title {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--aqua);
+    margin-bottom: 0.9rem;
+  }
+  .inc-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    background: rgba(124, 58, 237, 0.08);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 0.95rem 1.1rem;
+    margin-bottom: 0.7rem;
+  }
+  .inc-icon {
+    width: 36px; height: 36px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(34,211,238,0.18));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+  }
+  .inc-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--paper);
+    margin-bottom: 0.15rem;
+  }
+  .inc-desc {
+    font-size: 0.83rem;
+    line-height: 1.45;
+    color: var(--paper-mute);
+  }
+
   /* Status box */
   .status-box {
     background: rgba(240, 194, 68, 0.07);
@@ -246,9 +289,34 @@
     <div class="eyebrow">✦ Pago Confirmado</div>
     <h1>¡Gracias por tu <em>compra</em>!</h1>
     <p class="subtitle">
-      Tu pago se procesó correctamente. Estamos enviando tu
-      Informe de Madurez en IA a tu correo electrónico.
+      Tu pago se procesó correctamente. Esto es todo lo que
+      acabas de activar para tu negocio:
     </p>
+
+    <div class="includes">
+      <div class="includes-title">Lo que adquiriste</div>
+      <div class="inc-item">
+        <div class="inc-icon">📄</div>
+        <div>
+          <div class="inc-name">Informe de Madurez en IA</div>
+          <div class="inc-desc">PDF personalizado con tu diagnóstico en 6 dimensiones y roadmap de 90 días. Llega a tu correo en minutos.</div>
+        </div>
+      </div>
+      <div class="inc-item">
+        <div class="inc-icon">🌐</div>
+        <div>
+          <div class="inc-name">Búsqueda Integrada en IA</div>
+          <div class="inc-desc">Tu ficha de autoridad en el Directorio GEO, estructurada para que ChatGPT, Gemini y Perplexity entiendan y recomienden tu negocio.</div>
+        </div>
+      </div>
+      <div class="inc-item">
+        <div class="inc-icon">📈</div>
+        <div>
+          <div class="inc-name">Share of Model</div>
+          <div class="inc-desc">Inicia la construcción de tu Autoridad de Citación: presencia medible de tu marca dentro de las respuestas de los motores de IA.</div>
+        </div>
+      </div>
+    </div>
 
     <div class="status-box">
       <div class="status-icon">📧</div>
