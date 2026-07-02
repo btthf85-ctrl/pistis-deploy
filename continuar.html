@@ -332,6 +332,12 @@
       </div>
 
       <div class="field">
+        <label for="correo">Correo donde recibirás tu informe</label>
+        <input type="text" id="correo" name="correo" placeholder="tu@correo.com" required />
+        <div class="hint">A este correo llegará tu Informe de Madurez en IA en PDF.</div>
+      </div>
+
+      <div class="field">
         <label for="telefono">Teléfono de contacto <span class="optional">(opcional)</span></label>
         <input type="tel" id="telefono" name="telefono" placeholder="442 123 4567" />
         <div class="hint">Aparecerá en tu ficha para que los clientes te contacten directo.</div>
@@ -365,6 +371,7 @@
   // CONFIGURACIÓN — Webhook del workflow PSC 3 (Directorio GEO)
   // ════════════════════════════════════════════════════════════
   const N8N_PSC3_URL = 'https://n8n-po5n.srv1769442.hstgr.cloud/webhook/nuevo-cliente-geo';
+  const N8N_PSC2_URL = 'https://n8n-po5n.srv1769442.hstgr.cloud/webhook/pago-exitoso';
   const PAGINA_GRACIAS = '/gracias.html';
 
   // Recuperar los datos del cliente. Estrategia robusta de 3 capas:
@@ -407,8 +414,12 @@
   // Prefill: cargar los datos que ya tenemos del cliente.
   const negocioInput = document.getElementById('negocio');
   const sitioInput = document.getElementById('sitio');
+  const correoInput = document.getElementById('correo');
   if (lead.company && !negocioInput.value) {
     negocioInput.value = lead.company;
+  }
+  if (lead.email && !correoInput.value) {
+    correoInput.value = lead.email;
   }
   if (lead.website && !sitioInput.value) {
     sitioInput.value = lead.website;
@@ -418,13 +429,14 @@
   const giro = document.getElementById('giro');
   const ciudad = document.getElementById('ciudad');
   const dato = document.getElementById('dato');
+  const correo = document.getElementById('correo');
   const telefono = document.getElementById('telefono');
   const formError = document.getElementById('form-error');
   const submitBtn = document.getElementById('submit-btn');
   const overlay = document.getElementById('sending-overlay');
 
   // Limpiar error al escribir
-  [negocio, giro, ciudad, sitioInput, dato, telefono].forEach(el => {
+  [negocio, giro, ciudad, sitioInput, dato, correo, telefono].forEach(el => {
     el.addEventListener('input', () => {
       el.classList.remove('invalid');
       formError.textContent = '';
@@ -433,15 +445,17 @@
 
   function validar() {
     let ok = true;
-    [negocio, giro, ciudad, dato].forEach(el => el.classList.remove('invalid'));
+    [negocio, giro, ciudad, dato, correo].forEach(el => el.classList.remove('invalid'));
 
     if (negocio.value.trim().length < 2) { negocio.classList.add('invalid'); ok = false; }
     if (giro.value.trim().length < 3) { giro.classList.add('invalid'); ok = false; }
     if (ciudad.value.trim().length < 2) { ciudad.classList.add('invalid'); ok = false; }
     if (dato.value.trim().length < 15) { dato.classList.add('invalid'); ok = false; }
+    const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRx.test(correo.value.trim())) { correo.classList.add('invalid'); ok = false; }
 
     if (!ok) {
-      formError.textContent = 'Por favor completa el nombre del negocio, el giro, la ciudad y un dato específico (mínimo unas palabras).';
+      formError.textContent = 'Completa el nombre del negocio, giro, ciudad, un dato específico y un correo válido.';
     }
     return ok;
   }
@@ -449,47 +463,62 @@
   submitBtn.addEventListener('click', async () => {
     if (!validar()) return;
 
-    // Construir el payload con el formato exacto que PSC 3 espera:
-    // nombre, nicho, ciudad, url, dato, telefono
-    const payload = {
+    const emailFinal = correo.value.trim().toLowerCase();
+
+    // Payload para PSC 3 (ficha del directorio GEO)
+    const payloadGEO = {
       nombre: negocio.value.trim(),
       nicho: giro.value.trim(),
       ciudad: ciudad.value.trim(),
       url: (sitioInput.value.trim() || lead.website || ''),
       dato: dato.value.trim(),
       telefono: telefono.value.trim(),
-      // Datos extra de contexto (por si PSC 3 los aprovecha a futuro)
-      email: lead.email || '',
+      email: emailFinal,
       contacto: lead.name || ''
+    };
+
+    // Payload para PSC 2 (informe PDF) — rama "datos_directos" del Router
+    const payloadPDF = {
+      name: lead.name || negocio.value.trim(),
+      email: emailFinal,
+      company: negocio.value.trim(),
+      score: lead.score != null ? lead.score : null,
+      tier: lead.tier || '',
+      payment_ref: window.PSC_PAYMENT_ID || '',
+      paidAt: new Date().toISOString()
     };
 
     // Mostrar overlay de carga
     submitBtn.disabled = true;
     overlay.classList.add('show');
 
+    // Disparar AMBOS procesos en segundo plano con keepalive:
+    // las peticiones se completan aunque naveguemos a gracias de inmediato.
     try {
-      const resp = await fetch(N8N_PSC3_URL, {
+      fetch(N8N_PSC3_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+        body: JSON.stringify(payloadGEO),
+        keepalive: true
+      }).catch(() => {});
 
-      // Tanto si responde OK como si tarda, limpiamos y vamos a gracias.
-      // PSC 3 sigue procesando en segundo plano aunque el usuario avance.
-      try {
-        localStorage.removeItem('psc_lead');
-        sessionStorage.removeItem('psc_lead');
-      } catch (e) {}
+      fetch(N8N_PSC2_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payloadPDF),
+        keepalive: true
+      }).catch(() => {});
+    } catch (e) { console.warn('Error al disparar procesos:', e); }
 
-      // Redirigir a la página de gracias (cierre del proceso)
-      window.location.href = PAGINA_GRACIAS;
+    // Guardar el correo para que gracias.html lo muestre, y limpiar el lead.
+    try {
+      localStorage.setItem('psc_informe_email', emailFinal);
+      localStorage.removeItem('psc_lead');
+      sessionStorage.removeItem('psc_lead');
+    } catch (e) {}
 
-    } catch (err) {
-      console.error('Error al enviar a PSC 3:', err);
-      // Aun si falla la red, el cliente ya pagó: lo mandamos a gracias igual,
-      // y tú podrás generar la ficha manualmente si hiciera falta.
-      window.location.href = PAGINA_GRACIAS;
-    }
+    // Breve pausa para que las peticiones salgan, y a gracias.
+    setTimeout(() => { window.location.href = PAGINA_GRACIAS; }, 1200);
   });
 })();
 </script>

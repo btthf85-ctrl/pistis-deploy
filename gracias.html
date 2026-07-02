@@ -277,61 +277,26 @@
   'use strict';
 
   // ════════════════════════════════════════════════════════════
-  // CONFIGURACIÓN — Webhook de n8n para entrega del PDF tras pago confirmado.
-  // Workflow correspondiente: PSC 2 — Entrega de PDF (Gemini + PDFShift)
+  // Esta página ya NO dispara el webhook del PDF.
+  // El informe y la ficha GEO se disparan desde continuar.html al
+  // enviar el formulario. Aquí solo confirmamos al cliente.
   // ════════════════════════════════════════════════════════════
-  const N8N_WEBHOOK_URL = 'https://n8n-po5n.srv1769442.hstgr.cloud/webhook/pago-exitoso';
 
   const statusDesc = document.getElementById('status-desc');
 
-  // Recuperar los datos del cliente guardados antes del pago.
-  // Usamos localStorage (no sessionStorage) porque Mercado Pago abre esta
-  // página en un contexto nuevo y sessionStorage no sobrevive la redirección.
-  let lead = null;
+  // Recuperar el correo al que se envió el informe (guardado por continuar.html)
+  let emailInforme = '';
   try {
-    const raw = localStorage.getItem('psc_lead') || sessionStorage.getItem('psc_lead');
-    if (raw) lead = JSON.parse(raw);
-  } catch (e) {
-    console.warn('No se pudo leer el almacenamiento local:', e);
+    emailInforme = localStorage.getItem('psc_informe_email') || '';
+  } catch (e) { console.warn('No se pudo leer el almacenamiento:', e); }
+
+  if (emailInforme) {
+    statusDesc.innerHTML = '✓ ¡Listo! Tu informe está en camino a <strong>' + emailInforme + '</strong>. Llegará en los próximos minutos. Revisa tu bandeja de entrada (y la carpeta de spam).';
+    // Limpiar el marcador ya mostrado
+    try { localStorage.removeItem('psc_informe_email'); } catch (e) {}
+  } else {
+    statusDesc.innerHTML = 'Tu proceso se completó correctamente. Tu informe llegará a tu correo en los próximos minutos. Si no lo recibes, escríbenos por WhatsApp.';
   }
-
-  async function enviarInforme() {
-    // Si no hay datos guardados, mostrar mensaje pidiendo contacto
-    if (!lead || !lead.email) {
-      statusDesc.innerHTML = 'No encontramos tus datos. Por favor escríbenos por WhatsApp para enviarte tu informe.';
-      return;
-    }
-
-    try {
-      const response = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: lead.name || 'Cliente',
-          email: lead.email,
-          company: lead.company || '',
-          website: lead.website || '',
-          score: lead.score || null,
-          tier: lead.tier || '',
-          paidAt: new Date().toISOString()
-        })
-      });
-
-      if (response.ok) {
-        statusDesc.innerHTML = '✓ ¡Listo! Tu informe fue enviado a <strong>' + lead.email + '</strong>. Revisa tu bandeja de entrada (y spam).';
-        // Limpiar los datos ya usados de ambos almacenamientos
-        try { localStorage.removeItem('psc_lead'); sessionStorage.removeItem('psc_lead'); } catch (e) {}
-      } else {
-        statusDesc.innerHTML = 'Tu pago fue exitoso. Si no recibes el informe en unos minutos, escríbenos por WhatsApp.';
-      }
-    } catch (err) {
-      console.error('Error al enviar al webhook:', err);
-      statusDesc.innerHTML = 'Tu pago fue exitoso. Si no recibes el informe en unos minutos, escríbenos por WhatsApp.';
-    }
-  }
-
-  // Disparar el envío al cargar la página
-  enviarInforme();
 })();
 </script>
 </body>
