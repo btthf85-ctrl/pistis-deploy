@@ -24,5 +24,11 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://pistissophiacore.com/directorio-geo/bussines-marketing-queretaro-contenido-digital</loc>
+    <lastmod>2026-07-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <!-- N8N:INSERT_URL -->
 </urlset>
