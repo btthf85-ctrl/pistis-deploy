@@ -331,7 +331,7 @@
         </div>
       </div>
 
-      <div class="field">
+      <div class="field" id="campo-correo">
         <label for="correo">Correo donde recibirás tu informe</label>
         <input type="text" id="correo" name="correo" placeholder="tu@correo.com" required />
         <div class="hint">A este correo llegará tu Informe de Madurez en IA en PDF.</div>
@@ -346,7 +346,7 @@
       <div class="form-error" id="form-error" role="alert"></div>
 
       <button class="submit-btn" id="submit-btn" type="button">
-        Generar mi presencia en IA
+        ✦ Activar mi Autoridad Digital
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </button>
 
@@ -420,6 +420,10 @@
   }
   if (lead.email && !correoInput.value) {
     correoInput.value = lead.email;
+    // Ya tenemos su correo: no se lo pedimos de nuevo (el campo queda oculto
+    // pero con el valor cargado; solo aparece si el dato se perdió).
+    const campoCorreo = document.getElementById('campo-correo');
+    if (campoCorreo) campoCorreo.style.display = 'none';
   }
   if (lead.website && !sitioInput.value) {
     sitioInput.value = lead.website;
