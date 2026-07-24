@@ -384,6 +384,22 @@
     transition: color 0.25s, background 0.25s;
   }
   .nav-links a:hover { color: var(--paper); background: rgba(167, 139, 250, 0.08); }
+  /* Enlace destacado: Suscripciones (nueva oferta) */
+  .nav-links a.nav-link-featured {
+    color: var(--gold-soft);
+    position: relative;
+  }
+  .nav-links a.nav-link-featured::after {
+    content: "";
+    position: absolute; top: 0.35rem; right: 0.15rem;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+  }
+  .nav-links a.nav-link-featured:hover {
+    color: var(--gold);
+    background: rgba(240, 194, 68, 0.1);
+  }
   .nav-cta {
     display: inline-flex;
     align-items: center;
@@ -2263,6 +2279,7 @@
       <li><a href="#evo">EVO Protocol</a></li>
       <li><a href="#resultados">Resultados</a></li>
       <li><a href="#quiz">Diagnóstico</a></li>
+      <li><a href="/servicios-suscripcion.html" class="nav-link-featured">Suscripciones</a></li>
       <li><a href="/directorio-geo/">Directorio</a></li>
     </ul>
     <a href="https://wa.link/f41oyi" target="_blank" rel="noopener" class="nav-cta" aria-label="Conversar por WhatsApp">
