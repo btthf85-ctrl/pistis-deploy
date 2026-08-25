@@ -137,6 +137,40 @@
       var(--void);
     z-index: -3;
   }
+
+  /* ─────────────────────────────────────────────────────────
+     FONDO FÍLMICO DIRIGIDO POR SCROLL
+     Vive DENTRO de #hero y #servicios, en un contexto aislado,
+     para no competir con el apilamiento global de la página.
+     ───────────────────────────────────────────────────────── */
+  #hero, #servicios { isolation: isolate; }
+  #hero > .container, #servicios > .container { position: relative; z-index: 2; }
+
+  .sf-layer {
+    position: absolute; inset: 0; z-index: 0;
+    overflow: hidden; pointer-events: none;
+    opacity: 0; transition: opacity 1.2s cubic-bezier(.16,1,.3,1);
+  }
+  .sf-layer.on { opacity: 1; }
+  .sf-img {
+    position: sticky; top: 0;
+    display: block; width: 100%; height: 100vh;
+    object-fit: cover; object-position: center;
+    filter: brightness(1.25) saturate(1.15);
+  }
+  .sf-veil {
+    position: sticky; top: 0; display: block;
+    width: 100%; height: 100vh; margin-top: -100vh;
+    background:
+      linear-gradient(100deg, rgba(5,3,22,.93) 0%, rgba(5,3,22,.82) 32%, rgba(5,3,22,.50) 62%, rgba(5,3,22,.44) 100%),
+      linear-gradient(180deg, rgba(5,3,22,.66) 0%, rgba(5,3,22,.36) 42%, rgba(5,3,22,.74) 100%);
+  }
+  @media (max-width: 820px) {
+    .sf-veil { background:
+      linear-gradient(180deg, rgba(5,3,22,.80) 0%, rgba(5,3,22,.58) 45%, rgba(5,3,22,.84) 100%); }
+  }
+  @media (prefers-reduced-motion: reduce) { .sf-layer { display: none; } }
+
   body::after {
     content: "";
     position: fixed; inset: 0;
@@ -2257,6 +2291,120 @@
     .paywall-card h3 { font-size: 1.35rem !important; }
     .countdown-digit { font-size: 2rem !important; }
   }
+  /* ─────────────────────────────────────────────────────────
+     PANEL · INTEGRANTES Y COMUNIDAD
+     Marco de precisión con la identidad PSC: esquinas doradas,
+     retícula de fondo, emblema romboidal y órbita en marcha.
+     ───────────────────────────────────────────────────────── */
+  .film { margin: 0 0 2.25rem; max-width: 60ch; }
+
+  .film-frame {
+    position: relative; aspect-ratio: 16 / 9; overflow: hidden;
+    cursor: pointer; border-radius: 3px;
+    background:
+      radial-gradient(ellipse at 50% 45%, rgba(124,58,237,.24), transparent 66%),
+      linear-gradient(168deg, rgba(21,13,53,.94), rgba(6,4,20,.99));
+    border: 1px solid rgba(167,139,250,.16);
+    transition: border-color .7s cubic-bezier(.16,1,.3,1),
+                box-shadow .7s cubic-bezier(.16,1,.3,1);
+  }
+  .film-frame:hover {
+    border-color: rgba(240,194,68,.34);
+    box-shadow: 0 24px 70px -30px rgba(124,58,237,.6);
+  }
+  /* Hairline superior con el degradado de marca */
+  .film-frame::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; z-index: 4;
+    background: linear-gradient(90deg, transparent, var(--gold) 22%, var(--violet-bright) 55%, var(--aqua-bright) 82%, transparent);
+    opacity: .5; transition: opacity .7s;
+  }
+  .film-frame:hover::before { opacity: 1; }
+
+  /* Retícula tenue: precisión, gobernanza */
+  .film-grid {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .5;
+    background-image:
+      linear-gradient(rgba(167,139,250,.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(167,139,250,.055) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse at 50% 50%, #000 20%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 20%, transparent 78%);
+  }
+
+  /* Esquinas tipo visor */
+  .film-cnr {
+    position: absolute; width: 15px; height: 15px; z-index: 4; pointer-events: none;
+    border: 0 solid var(--gold); opacity: .38;
+    transition: opacity .7s cubic-bezier(.16,1,.3,1), width .7s cubic-bezier(.16,1,.3,1), height .7s cubic-bezier(.16,1,.3,1);
+  }
+  .film-frame:hover .film-cnr { opacity: .85; width: 21px; height: 21px; }
+  .film-cnr.tl { top: 9px; left: 9px;  border-top-width: 1px; border-left-width: 1px; }
+  .film-cnr.tr { top: 9px; right: 9px; border-top-width: 1px; border-right-width: 1px; }
+  .film-cnr.bl { bottom: 9px; left: 9px;  border-bottom-width: 1px; border-left-width: 1px; }
+  .film-cnr.br { bottom: 9px; right: 9px; border-bottom-width: 1px; border-right-width: 1px; }
+
+  .film-play {
+    position: absolute; inset: 0; z-index: 3;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.15rem;
+  }
+
+  /* Emblema romboidal con órbita */
+  .film-orb {
+    position: relative; width: 74px; height: 74px;
+    display: grid; place-items: center;
+    transition: transform .6s cubic-bezier(.16,1,.3,1);
+  }
+  .film-frame:hover .film-orb { transform: scale(1.06); }
+  .film-orb::before {
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    border: 1px solid rgba(196,181,253,.26);
+    border-top-color: var(--gold);
+    animation: filmSpin 9s linear infinite;
+  }
+  .film-orb::after {
+    content: ""; position: absolute; inset: -9px; border-radius: 50%;
+    border: 1px solid rgba(34,211,238,.16);
+    animation: filmSpin 16s linear infinite reverse;
+  }
+  @keyframes filmSpin { to { transform: rotate(360deg); } }
+
+  .film-dia {
+    position: absolute; width: 46px; height: 46px;
+    opacity: .16; transition: opacity .6s;
+  }
+  .film-frame:hover .film-dia { opacity: .3; }
+
+  .film-tri {
+    position: relative; z-index: 2; display: block;
+    width: 0; height: 0; margin-left: 3px;
+    border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+    border-left: 10px solid var(--paper);
+    transition: border-left-color .6s;
+  }
+  .film-frame:hover .film-tri { border-left-color: var(--gold); }
+
+  .film-lbl {
+    font-family: var(--font-mono); font-size: .58rem; font-weight: 400;
+    letter-spacing: .34em; text-transform: uppercase; text-indent: .34em;
+    color: var(--paper-mute); transition: color .6s;
+  }
+  .film-frame:hover .film-lbl { color: var(--paper); }
+
+  /* Sello de sección, como el resto del sistema */
+  .film-tag {
+    position: absolute; bottom: 13px; right: 15px; z-index: 4;
+    font-family: var(--font-mono); font-size: .53rem;
+    letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(196,181,253,.3); transition: color .6s;
+  }
+  .film-frame:hover .film-tag { color: rgba(240,194,68,.6); }
+
+  .film-frame iframe, .film-frame video {
+    position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 6;
+  }
+
+  @media (max-width: 900px) { .film { max-width: 100%; } }
+
 </style>
 </head>
 <body>
@@ -2298,6 +2446,7 @@
      HERO
      ══════════════════════════════════════════════════════════ -->
 <section id="hero">
+  <div class="sf-layer" data-sf="hero" aria-hidden="true"><img class="sf-img" alt="" /><div class="sf-veil"></div></div>
   <div class="container">
     <div class="hero-grid">
       <div class="hero-copy">
@@ -2307,7 +2456,32 @@
           <span class="line"><em class="italic">despierta.</em></span>
           <span class="line gradient-text">Negocios que evolucionan.</span>
         </h1>
-        <p class="lead-p reveal" style="transition-delay: .2s;">
+
+        <!-- ── PANEL · INTEGRANTES Y COMUNIDAD ── -->
+        <div class="film reveal" id="comunidad" style="transition-delay: .18s;">
+          <div class="film-frame" id="film-frame" data-video="" data-autoplay="1"
+               role="button" tabindex="0" aria-label="Reproducir video de integrantes y comunidad">
+            <span class="film-cnr tl"></span><span class="film-cnr tr"></span>
+            <span class="film-cnr bl"></span><span class="film-cnr br"></span>
+            <div class="film-grid" aria-hidden="true"></div>
+            <div class="film-play" id="film-play">
+              <span class="film-orb">
+                <svg class="film-dia" viewBox="0 0 54 54" aria-hidden="true">
+                  <defs><linearGradient id="filmG" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#f0c244"/><stop offset="100%" stop-color="#a855f7"/>
+                  </linearGradient></defs>
+                  <path d="M27 3 L51 27 L27 51 L3 27 Z" fill="none" stroke="url(#filmG)" stroke-width="1.2"/>
+                  <path d="M27 14 L40 27 L27 40 L14 27 Z" fill="url(#filmG)" opacity=".92"/>
+                </svg>
+                <i class="film-tri" aria-hidden="true"></i>
+              </span>
+              <span class="film-lbl">Integrantes &amp; Comunidad</span>
+            </div>
+            <span class="film-tag">PSC · 02</span>
+          </div>
+        </div>
+
+        <p class="lead-p reveal" style="transition-delay: .24s;">
           Implementamos sistemas de IA con gobernanza <strong style="color:var(--paper)">ISO 42001</strong>,
           automatización con Make y n8n, y posicionamiento <strong style="color:var(--paper)">GEO/AEO</strong>
           en los motores generativos que ya están definiendo cómo te encuentran tus clientes.
@@ -2390,6 +2564,7 @@
      SOLAR SYSTEM — SERVICES
      ══════════════════════════════════════════════════════════ -->
 <section id="servicios">
+  <div class="sf-layer" data-sf="servicios" aria-hidden="true"><img class="sf-img" alt="" /><div class="sf-veil"></div></div>
   <div class="container">
     <div class="section-head reveal">
       <span class="eyebrow">Constelación de servicios</span>
@@ -4344,6 +4519,149 @@
     });
   })();
 
+})();
+</script>
+<script>
+/* PANEL · INTEGRANTES Y COMUNIDAD
+   Facade: el reproductor sólo se carga al hacer clic, para no penalizar
+   la carga inicial del hero.
+
+   Configuración en el contenedor #film-frame:
+     data-video="ID"                  → YouTube
+     data-video="vimeo:ID"            → Vimeo
+     data-video="/media/equipo.mp4"   → archivo propio
+     data-autoplay="1"                → arranca solo (silenciado) al entrar en pantalla
+                                        Quítalo si prefieres que siempre se dé clic.
+   Mientras data-video esté vacío, el panel se queda como está: no falla. */
+(() => {
+  const frame = document.getElementById('film-frame');
+  if (!frame) return;
+
+  function reproducir(auto) {
+    if (frame.dataset.cargado === '1') return;
+    const src = (frame.dataset.video || '').trim();
+
+    if (!src) {
+      if (!auto) {
+        const l = frame.querySelector('.film-lbl');
+        if (l) l.textContent = 'Disponible próximamente';
+      }
+      return;
+    }
+
+    frame.dataset.cargado = '1';
+    const p = document.getElementById('film-play');
+    if (p) p.remove();
+
+    let el;
+    if (/^https?:|\.mp4$|\.webm$/i.test(src)) {
+      el = document.createElement('video');
+      el.src = src; el.controls = true; el.playsInline = true; el.autoplay = true;
+      if (auto) el.muted = true;   // los navegadores sólo permiten autoplay sin sonido
+    } else {
+      el = document.createElement('iframe');
+      const vimeo = src.startsWith('vimeo:');
+      const mute  = auto ? 1 : 0;
+      el.src = vimeo
+        ? 'https://player.vimeo.com/video/' + src.slice(6) + '?autoplay=1&muted=' + mute
+        : 'https://www.youtube-nocookie.com/embed/' + src + '?autoplay=1&mute=' + mute + '&rel=0';
+      el.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture';
+      el.allowFullscreen = true;
+      el.title = 'Integrantes y comunidad de Pistis Sophia Core';
+    }
+    frame.appendChild(el);
+  }
+
+  frame.addEventListener('click', () => reproducir(false));
+  frame.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); reproducir(false); }
+  });
+
+  // Arranque automático al entrar en pantalla, si está habilitado y hay video.
+  if (frame.dataset.autoplay === '1' && (frame.dataset.video || '').trim()) {
+    const io = new IntersectionObserver(es => {
+      es.forEach(en => { if (en.isIntersecting) { reproducir(true); io.disconnect(); } });
+    }, { threshold: 0.5 });
+    io.observe(frame);
+  }
+})();
+</script>
+<script>
+/* FONDO FÍLMICO DIRIGIDO POR SCROLL
+   El desplazamiento a lo largo de #hero + #servicios "reproduce"
+   una secuencia de fotogramas. Carga híbrida: secuencia completa
+   en escritorio, versión ligera en móvil. Si los fotogramas no
+   cargan, la página conserva su fondo original. */
+(() => {
+  'use strict';
+  const capas = [...document.querySelectorAll('.sf-layer')];
+  const hero  = document.getElementById('hero');
+  const serv  = document.getElementById('servicios');
+  if (!capas.length || !hero || !serv) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const movil  = window.matchMedia('(max-width: 820px)').matches;
+  const BASE   = movil ? 'film/m/' : 'film/d/';
+  const TOTAL  = movil ? 45 : 90;
+  const nombre = i => BASE + 'f' + String(i + 1).padStart(3, '0') + '.webp';
+  const cargado = new Array(TOTAL).fill(false);
+  let actual = -1, pendiente = true;
+
+  function progreso() {
+    const ini  = hero.offsetTop;
+    const fin  = serv.offsetTop + serv.offsetHeight - window.innerHeight * 0.5;
+    return Math.min(1, Math.max(0, (window.scrollY - ini) / Math.max(1, fin - ini)));
+  }
+  function disponible(i) {
+    if (cargado[i]) return i;
+    for (let d = 1; d < TOTAL; d++) {
+      if (i - d >= 0 && cargado[i - d]) return i - d;
+      if (i + d < TOTAL && cargado[i + d]) return i + d;
+    }
+    return -1;
+  }
+  function bucle() {
+    if (pendiente) {
+      pendiente = false;
+      const i = Math.min(TOTAL - 1, Math.round(progreso() * (TOTAL - 1)));
+      const usar = disponible(i);
+      if (usar >= 0 && usar !== actual) {
+        actual = usar;
+        const src = nombre(usar);
+        capas.forEach(c => { const im = c.querySelector('.sf-img'); if (im) im.src = src; });
+      }
+    }
+    requestAnimationFrame(bucle);
+  }
+  function precargar(i, cb) {
+    const im = new Image();
+    im.decoding = 'async';
+    im.onload  = () => { cargado[i] = true; pendiente = true; cb && cb(true); };
+    im.onerror = () => cb && cb(false);
+    im.src = nombre(i);
+  }
+
+  precargar(0, ok => {
+    if (!ok) return;                     // sin fotogramas: nada cambia
+    capas.forEach(c => {
+      const im = c.querySelector('.sf-img');
+      if (im) im.src = nombre(0);
+      c.classList.add('on');
+    });
+    bucle();
+    let sig = 1;
+    (function tanda() {
+      if (sig >= TOTAL) return;
+      let faltan = 0;
+      for (let k = 0; k < 3 && sig < TOTAL; k++, sig++) {
+        faltan++;
+        precargar(sig, () => { if (--faltan === 0) tanda(); });
+      }
+    })();
+  });
+
+  addEventListener('scroll', () => { pendiente = true; }, { passive: true });
+  addEventListener('resize', () => { pendiente = true; }, { passive: true });
 })();
 </script>
 </body>
