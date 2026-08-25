@@ -147,24 +147,21 @@
   #hero > .container, #servicios > .container { position: relative; z-index: 2; }
 
   .sf-layer {
-    position: absolute; inset: 0; z-index: 0;
+    position: fixed; inset: 0; z-index: 0;
     overflow: hidden; pointer-events: none;
-    opacity: 0; transition: opacity 1.2s cubic-bezier(.16,1,.3,1);
+    opacity: 0; transition: opacity 1.1s cubic-bezier(.16,1,.3,1);
   }
   .sf-layer.on { opacity: 1; }
   .sf-img {
-    position: sticky; top: 0;
-    display: block; width: 100%; height: 100vh;
+    position: absolute; inset: 0;
+    display: block; width: 100%; height: 100%;
     object-fit: cover; object-position: center;
-    filter: brightness(1.15) saturate(1.1);
-    will-change: transform;
   }
   .sf-veil {
-    position: sticky; top: 0; display: block;
-    width: 100%; height: 100vh; margin-top: -100vh;
+    position: absolute; inset: 0;
     background:
-      linear-gradient(100deg, rgba(5,3,22,.93) 0%, rgba(5,3,22,.82) 32%, rgba(5,3,22,.50) 62%, rgba(5,3,22,.44) 100%),
-      linear-gradient(180deg, rgba(5,3,22,.66) 0%, rgba(5,3,22,.36) 42%, rgba(5,3,22,.74) 100%);
+      linear-gradient(100deg, rgba(5,3,22,.94) 0%, rgba(5,3,22,.84) 34%, rgba(5,3,22,.56) 64%, rgba(5,3,22,.50) 100%),
+      linear-gradient(180deg, rgba(5,3,22,.70) 0%, rgba(5,3,22,.42) 44%, rgba(5,3,22,.78) 100%);
   }
   @media (max-width: 820px) {
     .sf-veil { background:
@@ -2447,7 +2444,7 @@
      HERO
      ══════════════════════════════════════════════════════════ -->
 <section id="hero">
-  <div class="sf-layer" data-sf="hero" aria-hidden="true"><video class="sf-img" muted playsinline preload="auto" poster="vid/film-poster.jpg"></video><div class="sf-veil"></div></div>
+  <div class="sf-layer" data-sf="hero" aria-hidden="true"><video class="sf-img" muted playsinline preload="auto" poster="vid/psc-bg.jpg"></video><div class="sf-veil"></div></div>
   <div class="container">
     <div class="hero-grid">
       <div class="hero-copy">
@@ -2565,7 +2562,7 @@
      SOLAR SYSTEM — SERVICES
      ══════════════════════════════════════════════════════════ -->
 <section id="servicios">
-  <div class="sf-layer" data-sf="servicios" aria-hidden="true"><video class="sf-img" muted playsinline preload="auto" poster="vid/film-poster.jpg"></video><div class="sf-veil"></div></div>
+  
   <div class="container">
     <div class="section-head reveal">
       <span class="eyebrow">Constelación de servicios</span>
@@ -4588,117 +4585,114 @@
 })();
 </script>
 <script>
-/* FONDO FÍLMICO DIRIGIDO POR SCROLL
-   Mueve el tiempo del video según la posición del scroll a lo largo
-   de #hero + #servicios. Usa el MP4 real (nítido y ligero) en vez de
-   una secuencia de imágenes. Si el video no carga, la página conserva
-   su fondo original. */
+/* ══════════════════════════════════════════════════════════════
+   FONDO DE VIDEO · PISTIS SOPHIA CORE
+
+   MODO   'loop'   → el video se reproduce solo, continuo y fluido
+          'scroll' → el video avanza según el desplazamiento
+          'off'    → sin fondo de video (la página queda como antes)
+
+   Una sola capa fija: no hay cortes ni reinicios entre secciones.
+   ══════════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
-  const capas = [...document.querySelectorAll('.sf-layer')];
+  const MODO      = 'loop';
+  const INTENSIDAD = 1;      // 0 = invisible · 1 = normal · 1.4 = más presente
+  const SUAVIDAD  = 0.14;    // sólo aplica en modo 'scroll'
+
+  if (MODO === 'off') return;
+
+  const capa  = document.querySelector('.sf-layer');
+  const video = capa && capa.querySelector('.sf-img');
   const hero  = document.getElementById('hero');
   const serv  = document.getElementById('servicios');
-  if (!capas.length || !hero || !serv) return;
+  if (!capa || !video || !hero || !serv) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  /* ─── AJUSTES RÁPIDOS ───────────────────────────────────────
-     MODO: 'scroll' → el video avanza con el desplazamiento
-           'loop'   → el video se reproduce solo, en bucle continuo
-     Si el scroll se siente brusco en algún equipo, cambia a 'loop'. */
-  const MODO = 'scroll';
-  const SUAVIDAD = 0.14;   // menor = más suave y perezoso; mayor = más directo
-  /* ──────────────────────────────────────────────────────────── */
-
   const movil = window.matchMedia('(max-width: 820px)').matches;
-  /* WebM/VP9 donde se soporta (más ligero); MP4/H.264 como respaldo
-     para Safari e iOS. */
   const prueba = document.createElement('video');
-  const ext = prueba.canPlayType('video/webm; codecs="vp9"') ? '.webm' : '.mp4';
-  const archivo = (movil ? 'film-mobile' : 'film') + ext;
-
-  /* Rutas candidatas: se usa la primera que responda, sin importar
-     dónde se haya subido la carpeta. */
-  const RUTAS = ['vid/', 'video/', 'assets/', 'assets/vid/', 'film/', ''];
-
-  const videos = capas.map(c => c.querySelector('.sf-img')).filter(Boolean);
-  if (!videos.length) return;
+  const usaWebm = !movil && prueba.canPlayType('video/webm; codecs="vp9"');
+  const archivo = movil ? 'psc-bg-mobile.mp4' : (usaWebm ? 'psc-bg.webm' : 'psc-bg.mp4');
+  const RUTAS = ['vid/', 'video/', 'assets/vid/', 'assets/', ''];
 
   let duracion = 0, objetivo = 0, actual = 0, listo = false;
+  const fin = () => serv.offsetTop + serv.offsetHeight;
 
   function progreso() {
     const ini = hero.offsetTop;
-    const fin = serv.offsetTop + serv.offsetHeight - window.innerHeight * 0.5;
-    return Math.min(1, Math.max(0, (window.scrollY - ini) / Math.max(1, fin - ini)));
+    const tope = fin() - window.innerHeight * 0.5;
+    return Math.min(1, Math.max(0, (window.scrollY - ini) / Math.max(1, tope - ini)));
   }
 
-  /* Suavizado: el tiempo persigue al objetivo en vez de saltar.
-     Esto es lo que hace que se sienta fluido y no a tirones. */
+  /* Se desvanece al salir de las dos primeras secciones */
+  function visibilidad() {
+    const limite = fin();
+    const margen = window.innerHeight * 0.6;
+    let v = 1;
+    if (window.scrollY > limite - margen) {
+      v = Math.max(0, 1 - (window.scrollY - (limite - margen)) / margen);
+    }
+    capa.style.opacity = String(v * INTENSIDAD);
+  }
+
   function bucle() {
-    if (listo && duracion > 0) {
-      objetivo = progreso() * (duracion - 0.06);
-      /* Suavizado: el tiempo persigue al objetivo, no salta. */
-      actual += (objetivo - actual) * SUAVIDAD;
-      if (Math.abs(objetivo - actual) < 0.01) actual = objetivo;
-      const t = Math.max(0, Math.min(duracion - 0.06, actual));
-      for (const v of videos) {
-        if (!v.seeking && Math.abs(v.currentTime - t) > 0.03) {
-          try { v.currentTime = t; } catch (e) {}
+    if (listo) {
+      visibilidad();
+      if (MODO === 'scroll' && duracion > 0) {
+        objetivo = progreso() * (duracion - 0.06);
+        actual += (objetivo - actual) * SUAVIDAD;
+        if (Math.abs(objetivo - actual) < 0.01) actual = objetivo;
+        if (!video.seeking && Math.abs(video.currentTime - actual) > 0.03) {
+          try { video.currentTime = actual; } catch (e) {}
         }
       }
     }
     requestAnimationFrame(bucle);
   }
-  /* Diagnóstico opcional desde la consola: PSCfilm() */
-  window.PSCfilm = () => ({ listo, duracion, progreso: progreso(), objetivo, actual,
-                            scrollY: window.scrollY, t: videos[0] && videos[0].currentTime });
 
-  function activar(ruta) {
-    videos.forEach((v, i) => {
-      /* Los listeners se registran ANTES de asignar el origen, y además
-         se comprueba readyState por si los metadatos ya estaban listos. */
-      const alTenerMetadatos = () => {
-        if (listo) return;
-        duracion = v.duration || 10;
-        listo = true;
-        capas.forEach(c => c.classList.add('on'));
-        console.info('[PSC] Fondo fílmico activo desde:', ruta + archivo, '· duración', duracion + 's');
-      };
-      if (i === 0) {
-        v.addEventListener('loadedmetadata', alTenerMetadatos);
-        v.addEventListener('loadeddata', alTenerMetadatos);
-        v.addEventListener('canplay', alTenerMetadatos);
-      }
-      /* iOS necesita un play/pause para habilitar el salto de tiempo */
-      v.addEventListener('canplay', () => {
-        v.play().then(() => v.pause()).catch(() => {});
-      }, { once: true });
+  function arrancar(ruta) {
+    const listoYa = () => {
+      if (listo) return;
+      duracion = video.duration || 10;
+      listo = true;
+      capa.classList.add('on');
+      visibilidad();
+      console.info('[PSC] Fondo de video · modo', MODO, '·', ruta + archivo);
+    };
+    video.addEventListener('loadedmetadata', listoYa);
+    video.addEventListener('loadeddata', listoYa);
+    video.addEventListener('canplay', listoYa);
 
-      v.src = ruta + archivo;
-      if (MODO === 'loop') { v.loop = true; }
-      v.load();
-
-      if (i === 0 && v.readyState >= 1) alTenerMetadatos();
-    });
+    video.muted = true;
+    video.playsInline = true;
     if (MODO === 'loop') {
-      videos.forEach(v => v.addEventListener('canplay', () => v.play().catch(() => {}), { once: true }));
+      video.loop = true;
+      video.addEventListener('canplay', () => video.play().catch(() => {}), { once: true });
     } else {
-      bucle();
+      video.addEventListener('canplay', () => {
+        video.play().then(() => video.pause()).catch(() => {});
+      }, { once: true });
     }
+
+    video.src = ruta + archivo;
+    video.load();
+    if (video.readyState >= 1) listoYa();
+    bucle();
   }
 
-  /* Localiza el archivo probando cada ruta */
   (function localizar(k) {
     if (k >= RUTAS.length) {
-      console.warn('[PSC] No encontré el video de fondo. Rutas probadas:',
-                   RUTAS.map(r => r + archivo).join(' , '));
+      console.warn('[PSC] No encontré', archivo, '· rutas probadas:', RUTAS.join(' , '));
       return;
     }
     fetch(RUTAS[k] + archivo, { method: 'HEAD' })
-      .then(r => r.ok ? activar(RUTAS[k]) : localizar(k + 1))
+      .then(r => r.ok ? arrancar(RUTAS[k]) : localizar(k + 1))
       .catch(() => localizar(k + 1));
   })(0);
 
-  addEventListener('resize', () => { listo = listo && true; }, { passive: true });
+  addEventListener('scroll', visibilidad, { passive: true });
+  window.PSCfilm = () => ({ MODO, listo, duracion, progreso: progreso(),
+                            t: video.currentTime, opacidad: capa.style.opacity });
 })();
 </script>
 </body>
