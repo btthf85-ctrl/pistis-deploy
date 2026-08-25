@@ -156,7 +156,8 @@
     position: sticky; top: 0;
     display: block; width: 100%; height: 100vh;
     object-fit: cover; object-position: center;
-    filter: brightness(1.25) saturate(1.15);
+    filter: brightness(1.15) saturate(1.1);
+    will-change: transform;
   }
   .sf-veil {
     position: sticky; top: 0; display: block;
@@ -2446,7 +2447,7 @@
      HERO
      ══════════════════════════════════════════════════════════ -->
 <section id="hero">
-  <div class="sf-layer" data-sf="hero" aria-hidden="true"><img class="sf-img" alt="" /><div class="sf-veil"></div></div>
+  <div class="sf-layer" data-sf="hero" aria-hidden="true"><video class="sf-img" muted playsinline preload="auto" poster="vid/film-poster.jpg"></video><div class="sf-veil"></div></div>
   <div class="container">
     <div class="hero-grid">
       <div class="hero-copy">
@@ -2564,7 +2565,7 @@
      SOLAR SYSTEM — SERVICES
      ══════════════════════════════════════════════════════════ -->
 <section id="servicios">
-  <div class="sf-layer" data-sf="servicios" aria-hidden="true"><img class="sf-img" alt="" /><div class="sf-veil"></div></div>
+  <div class="sf-layer" data-sf="servicios" aria-hidden="true"><video class="sf-img" muted playsinline preload="auto" poster="vid/film-poster.jpg"></video><div class="sf-veil"></div></div>
   <div class="container">
     <div class="section-head reveal">
       <span class="eyebrow">Constelación de servicios</span>
@@ -4588,10 +4589,10 @@
 </script>
 <script>
 /* FONDO FÍLMICO DIRIGIDO POR SCROLL
-   El desplazamiento a lo largo de #hero + #servicios "reproduce"
-   una secuencia de fotogramas. Carga híbrida: secuencia completa
-   en escritorio, versión ligera en móvil. Si los fotogramas no
-   cargan, la página conserva su fondo original. */
+   Mueve el tiempo del video según la posición del scroll a lo largo
+   de #hero + #servicios. Usa el MP4 real (nítido y ligero) en vez de
+   una secuencia de imágenes. Si el video no carga, la página conserva
+   su fondo original. */
 (() => {
   'use strict';
   const capas = [...document.querySelectorAll('.sf-layer')];
@@ -4600,102 +4601,104 @@
   if (!capas.length || !hero || !serv) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  const movil  = window.matchMedia('(max-width: 820px)').matches;
-  const TOTAL  = movil ? 45 : 90;
-  const carpeta = movil ? 'm' : 'd';
+  /* ─── AJUSTES RÁPIDOS ───────────────────────────────────────
+     MODO: 'scroll' → el video avanza con el desplazamiento
+           'loop'   → el video se reproduce solo, en bucle continuo
+     Si el scroll se siente brusco en algún equipo, cambia a 'loop'. */
+  const MODO = 'scroll';
+  const SUAVIDAD = 0.14;   // menor = más suave y perezoso; mayor = más directo
+  /* ──────────────────────────────────────────────────────────── */
 
-  /* Rutas candidatas: el motor prueba cada una y se queda con la
-     primera que responda. Así funciona sin importar si las carpetas
-     se subieron dentro de "film/" o sueltas en la raíz. */
-  const CANDIDATAS = [
-    'film/' + carpeta + '/',
-    carpeta + '/',
-    'assets/film/' + carpeta + '/',
-    'film-assets/film/' + carpeta + '/',
-    'film-assets/' + carpeta + '/',
-    'assets/' + carpeta + '/'
-  ];
-  let BASE = null;
-  const nombre = i => BASE + 'f' + String(i + 1).padStart(3, '0') + '.webp';
-  const cargado = new Array(TOTAL).fill(false);
-  let actual = -1, pendiente = true;
+  const movil = window.matchMedia('(max-width: 820px)').matches;
+  /* WebM/VP9 donde se soporta (más ligero); MP4/H.264 como respaldo
+     para Safari e iOS. */
+  const prueba = document.createElement('video');
+  const ext = prueba.canPlayType('video/webm; codecs="vp9"') ? '.webm' : '.mp4';
+  const archivo = (movil ? 'film-mobile' : 'film') + ext;
 
-  /* Busca la carpeta correcta probando el primer fotograma en cada ruta */
-  function localizar(listo) {
-    let k = 0;
-    (function probar() {
-      if (k >= CANDIDATAS.length) {
-        console.warn('[PSC] No encontré los fotogramas del fondo. Rutas probadas:',
-                     CANDIDATAS.join(' , '),
-                     '— sube la carpeta con los .webp a alguna de ellas.');
-        return listo(false);
-      }
-      const ruta = CANDIDATAS[k++];
-      const im = new Image();
-      im.onload  = () => { BASE = ruta; console.info('[PSC] Fondo fílmico cargando desde:', ruta); listo(true); };
-      im.onerror = probar;
-      im.src = ruta + 'f001.webp';
-    })();
-  }
+  /* Rutas candidatas: se usa la primera que responda, sin importar
+     dónde se haya subido la carpeta. */
+  const RUTAS = ['vid/', 'video/', 'assets/', 'assets/vid/', 'film/', ''];
+
+  const videos = capas.map(c => c.querySelector('.sf-img')).filter(Boolean);
+  if (!videos.length) return;
+
+  let duracion = 0, objetivo = 0, actual = 0, listo = false;
 
   function progreso() {
-    const ini  = hero.offsetTop;
-    const fin  = serv.offsetTop + serv.offsetHeight - window.innerHeight * 0.5;
+    const ini = hero.offsetTop;
+    const fin = serv.offsetTop + serv.offsetHeight - window.innerHeight * 0.5;
     return Math.min(1, Math.max(0, (window.scrollY - ini) / Math.max(1, fin - ini)));
   }
-  function disponible(i) {
-    if (cargado[i]) return i;
-    for (let d = 1; d < TOTAL; d++) {
-      if (i - d >= 0 && cargado[i - d]) return i - d;
-      if (i + d < TOTAL && cargado[i + d]) return i + d;
-    }
-    return -1;
-  }
+
+  /* Suavizado: el tiempo persigue al objetivo en vez de saltar.
+     Esto es lo que hace que se sienta fluido y no a tirones. */
   function bucle() {
-    if (pendiente) {
-      pendiente = false;
-      const i = Math.min(TOTAL - 1, Math.round(progreso() * (TOTAL - 1)));
-      const usar = disponible(i);
-      if (usar >= 0 && usar !== actual) {
-        actual = usar;
-        const src = nombre(usar);
-        capas.forEach(c => { const im = c.querySelector('.sf-img'); if (im) im.src = src; });
+    if (listo && duracion > 0) {
+      objetivo = progreso() * (duracion - 0.06);
+      /* Suavizado: el tiempo persigue al objetivo, no salta. */
+      actual += (objetivo - actual) * SUAVIDAD;
+      if (Math.abs(objetivo - actual) < 0.01) actual = objetivo;
+      const t = Math.max(0, Math.min(duracion - 0.06, actual));
+      for (const v of videos) {
+        if (!v.seeking && Math.abs(v.currentTime - t) > 0.03) {
+          try { v.currentTime = t; } catch (e) {}
+        }
       }
     }
     requestAnimationFrame(bucle);
   }
-  function precargar(i, cb) {
-    const im = new Image();
-    im.decoding = 'async';
-    im.onload  = () => { cargado[i] = true; pendiente = true; cb && cb(true); };
-    im.onerror = () => cb && cb(false);
-    im.src = nombre(i);
+  /* Diagnóstico opcional desde la consola: PSCfilm() */
+  window.PSCfilm = () => ({ listo, duracion, progreso: progreso(), objetivo, actual,
+                            scrollY: window.scrollY, t: videos[0] && videos[0].currentTime });
+
+  function activar(ruta) {
+    videos.forEach((v, i) => {
+      /* Los listeners se registran ANTES de asignar el origen, y además
+         se comprueba readyState por si los metadatos ya estaban listos. */
+      const alTenerMetadatos = () => {
+        if (listo) return;
+        duracion = v.duration || 10;
+        listo = true;
+        capas.forEach(c => c.classList.add('on'));
+        console.info('[PSC] Fondo fílmico activo desde:', ruta + archivo, '· duración', duracion + 's');
+      };
+      if (i === 0) {
+        v.addEventListener('loadedmetadata', alTenerMetadatos);
+        v.addEventListener('loadeddata', alTenerMetadatos);
+        v.addEventListener('canplay', alTenerMetadatos);
+      }
+      /* iOS necesita un play/pause para habilitar el salto de tiempo */
+      v.addEventListener('canplay', () => {
+        v.play().then(() => v.pause()).catch(() => {});
+      }, { once: true });
+
+      v.src = ruta + archivo;
+      if (MODO === 'loop') { v.loop = true; }
+      v.load();
+
+      if (i === 0 && v.readyState >= 1) alTenerMetadatos();
+    });
+    if (MODO === 'loop') {
+      videos.forEach(v => v.addEventListener('canplay', () => v.play().catch(() => {}), { once: true }));
+    } else {
+      bucle();
+    }
   }
 
-  localizar(encontrada => {
-    if (!encontrada) return;             // sin fotogramas: la página queda intacta
-    precargar(0, ok => {
-    if (!ok) return;
-    capas.forEach(c => {
-      const im = c.querySelector('.sf-img');
-      if (im) im.src = nombre(0);
-      c.classList.add('on');
-    });
-    bucle();
-    let sig = 1;
-    (function tanda() {
-      if (sig >= TOTAL) return;
-      let faltan = 0;
-      for (let k = 0; k < 3 && sig < TOTAL; k++, sig++) {
-        faltan++;
-        precargar(sig, () => { if (--faltan === 0) tanda(); });
-      }
-    })();
-    });
-  });
+  /* Localiza el archivo probando cada ruta */
+  (function localizar(k) {
+    if (k >= RUTAS.length) {
+      console.warn('[PSC] No encontré el video de fondo. Rutas probadas:',
+                   RUTAS.map(r => r + archivo).join(' , '));
+      return;
+    }
+    fetch(RUTAS[k] + archivo, { method: 'HEAD' })
+      .then(r => r.ok ? activar(RUTAS[k]) : localizar(k + 1))
+      .catch(() => localizar(k + 1));
+  })(0);
 
-  addEventListener('scroll', () => { pendiente = true; }, { passive: true });
-  addEventListener('resize', () => { pendiente = true; }, { passive: true });
+  addEventListener('resize', () => { listo = listo && true; }, { passive: true });
 })();
 </script>
 </body>
