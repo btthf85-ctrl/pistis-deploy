@@ -4601,11 +4601,42 @@
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   const movil  = window.matchMedia('(max-width: 820px)').matches;
-  const BASE   = movil ? 'film/m/' : 'film/d/';
   const TOTAL  = movil ? 45 : 90;
+  const carpeta = movil ? 'm' : 'd';
+
+  /* Rutas candidatas: el motor prueba cada una y se queda con la
+     primera que responda. Así funciona sin importar si las carpetas
+     se subieron dentro de "film/" o sueltas en la raíz. */
+  const CANDIDATAS = [
+    'film/' + carpeta + '/',
+    carpeta + '/',
+    'assets/film/' + carpeta + '/',
+    'film-assets/film/' + carpeta + '/',
+    'film-assets/' + carpeta + '/',
+    'assets/' + carpeta + '/'
+  ];
+  let BASE = null;
   const nombre = i => BASE + 'f' + String(i + 1).padStart(3, '0') + '.webp';
   const cargado = new Array(TOTAL).fill(false);
   let actual = -1, pendiente = true;
+
+  /* Busca la carpeta correcta probando el primer fotograma en cada ruta */
+  function localizar(listo) {
+    let k = 0;
+    (function probar() {
+      if (k >= CANDIDATAS.length) {
+        console.warn('[PSC] No encontré los fotogramas del fondo. Rutas probadas:',
+                     CANDIDATAS.join(' , '),
+                     '— sube la carpeta con los .webp a alguna de ellas.');
+        return listo(false);
+      }
+      const ruta = CANDIDATAS[k++];
+      const im = new Image();
+      im.onload  = () => { BASE = ruta; console.info('[PSC] Fondo fílmico cargando desde:', ruta); listo(true); };
+      im.onerror = probar;
+      im.src = ruta + 'f001.webp';
+    })();
+  }
 
   function progreso() {
     const ini  = hero.offsetTop;
@@ -4641,8 +4672,10 @@
     im.src = nombre(i);
   }
 
-  precargar(0, ok => {
-    if (!ok) return;                     // sin fotogramas: nada cambia
+  localizar(encontrada => {
+    if (!encontrada) return;             // sin fotogramas: la página queda intacta
+    precargar(0, ok => {
+    if (!ok) return;
     capas.forEach(c => {
       const im = c.querySelector('.sf-img');
       if (im) im.src = nombre(0);
@@ -4658,6 +4691,7 @@
         precargar(sig, () => { if (--faltan === 0) tanda(); });
       }
     })();
+    });
   });
 
   addEventListener('scroll', () => { pendiente = true; }, { passive: true });
