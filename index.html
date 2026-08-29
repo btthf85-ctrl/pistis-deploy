@@ -2341,6 +2341,40 @@
   .film-cnr.bl { bottom: 9px; left: 9px;  border-bottom-width: 1px; border-left-width: 1px; }
   .film-cnr.br { bottom: 9px; right: 9px; border-bottom-width: 1px; border-right-width: 1px; }
 
+
+  /* El video llena el marco y corre en bucle, silenciado por defecto */
+  .film-video {
+    position: absolute; inset: 0; z-index: 1;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+    pointer-events: none;
+    opacity: 0; transition: opacity 1s cubic-bezier(.16,1,.3,1);
+  }
+  .film-video.on { opacity: 1; }
+  /* Botón de sonido: aparece cuando el video ya corre */
+  .film-sound {
+    position: absolute; bottom: 14px; right: 15px; z-index: 4;
+    display: none; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.95rem;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--paper); background: rgba(5,3,22,.62);
+    border: 1px solid rgba(196,181,253,.4); border-radius: 100px;
+    cursor: pointer; backdrop-filter: blur(6px);
+    transition: border-color .4s, background .4s;
+  }
+  .film-sound.on { display: inline-flex; }
+  .film-sound:hover { border-color: var(--gold); background: rgba(5,3,22,.8); }
+  .film-sound .fs-ico {
+    display: block; width: 0; height: 0;
+    border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+    border-left: 8px solid currentColor;
+  }
+  .film-sound.sonando .fs-ico {
+    width: 8px; height: 10px; border: 0;
+    border-left: 3px solid currentColor; border-right: 3px solid currentColor;
+  }
+
   .film-play {
     position: absolute; inset: 0; z-index: 3;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.15rem;
@@ -2457,8 +2491,13 @@
 
         <!-- ── PANEL · INTEGRANTES Y COMUNIDAD ── -->
         <div class="film reveal" id="comunidad" style="transition-delay: .18s;">
-          <div class="film-frame" id="film-frame" data-video="" data-autoplay="1"
-               role="button" tabindex="0" aria-label="Reproducir video de integrantes y comunidad">
+          <div class="film-frame" id="film-frame"
+               role="button" tabindex="0" aria-label="Activar sonido del video de integrantes y comunidad">
+            <video id="film-video" class="film-video" muted loop playsinline preload="metadata"
+                   poster="com/comunidad.jpg" aria-hidden="true"></video>
+            <button class="film-sound" id="film-sound" type="button" aria-label="Activar sonido">
+              <span class="fs-ico" aria-hidden="true"></span><span class="fs-txt">Sonido</span>
+            </button>
             <span class="film-cnr tl"></span><span class="film-cnr tr"></span>
             <span class="film-cnr bl"></span><span class="film-cnr br"></span>
             <div class="film-grid" aria-hidden="true"></div>
@@ -4520,68 +4559,78 @@
 })();
 </script>
 <script>
-/* PANEL · INTEGRANTES Y COMUNIDAD
-   Facade: el reproductor sólo se carga al hacer clic, para no penalizar
-   la carga inicial del hero.
-
-   Configuración en el contenedor #film-frame:
-     data-video="ID"                  → YouTube
-     data-video="vimeo:ID"            → Vimeo
-     data-video="/media/equipo.mp4"   → archivo propio
-     data-autoplay="1"                → arranca solo (silenciado) al entrar en pantalla
-                                        Quítalo si prefieres que siempre se dé clic.
-   Mientras data-video esté vacío, el panel se queda como está: no falla. */
+/* ══════════════════════════════════════════════════════════════
+   PANEL · INTEGRANTES Y COMUNIDAD
+   El video corre en bucle, silenciado, en cuanto el panel entra
+   en pantalla. Los subtítulos van quemados, así que comunica sin
+   audio. Un clic activa el sonido.
+   ══════════════════════════════════════════════════════════════ */
 (() => {
-  const frame = document.getElementById('film-frame');
-  if (!frame) return;
+  'use strict';
+  const marco  = document.getElementById('film-frame');
+  const video  = document.getElementById('film-video');
+  const poster = document.getElementById('film-play');
+  const btn    = document.getElementById('film-sound');
+  if (!marco || !video) return;
 
-  function reproducir(auto) {
-    if (frame.dataset.cargado === '1') return;
-    const src = (frame.dataset.video || '').trim();
+  const prueba = document.createElement('video');
+  const archivo = prueba.canPlayType('video/webm; codecs="vp9"')
+                  ? 'comunidad.webm' : 'comunidad.mp4';
+  const RUTAS = ['com/', 'video/', 'vid/', 'assets/', ''];
+  let arrancado = false;
 
-    if (!src) {
-      if (!auto) {
-        const l = frame.querySelector('.film-lbl');
-        if (l) l.textContent = 'Disponible próximamente';
+  function arrancar(ruta) {
+    video.src = ruta + archivo;
+    video.load();
+    video.addEventListener('canplay', () => {
+      video.play().then(() => {
+        video.classList.add('on');
+        if (poster) poster.style.opacity = '0';
+        if (btn) btn.classList.add('on');
+        console.info('[PSC] Video de comunidad en bucle ·', ruta + archivo);
+      }).catch(() => {
+        /* Si el navegador bloquea el arranque, se queda el póster y el botón */
+        if (btn) { btn.classList.add('on'); btn.querySelector('.fs-txt').textContent = 'Reproducir'; }
+      });
+    }, { once: true });
+  }
+
+  /* Solo carga cuando el panel está por entrar en pantalla */
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (e.isIntersecting && !arrancado) {
+        arrancado = true;
+        io.disconnect();
+        (function localizar(k) {
+          if (k >= RUTAS.length) {
+            console.warn('[PSC] No encontré', archivo, '· rutas probadas:', RUTAS.join(' , '));
+            return;
+          }
+          fetch(RUTAS[k] + archivo, { method: 'HEAD' })
+            .then(r => r.ok ? arrancar(RUTAS[k]) : localizar(k + 1))
+            .catch(() => localizar(k + 1));
+        })(0);
       }
-      return;
-    }
+    });
+  }, { rootMargin: '300px' });
+  io.observe(marco);
 
-    frame.dataset.cargado = '1';
-    const p = document.getElementById('film-play');
-    if (p) p.remove();
-
-    let el;
-    if (/^https?:|\.mp4$|\.webm$/i.test(src)) {
-      el = document.createElement('video');
-      el.src = src; el.controls = true; el.playsInline = true; el.autoplay = true;
-      if (auto) el.muted = true;   // los navegadores sólo permiten autoplay sin sonido
-    } else {
-      el = document.createElement('iframe');
-      const vimeo = src.startsWith('vimeo:');
-      const mute  = auto ? 1 : 0;
-      el.src = vimeo
-        ? 'https://player.vimeo.com/video/' + src.slice(6) + '?autoplay=1&muted=' + mute
-        : 'https://www.youtube-nocookie.com/embed/' + src + '?autoplay=1&mute=' + mute + '&rel=0';
-      el.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture';
-      el.allowFullscreen = true;
-      el.title = 'Integrantes y comunidad de Pistis Sophia Core';
+  /* Sonido: un clic en el botón o en el marco */
+  function alternarSonido(e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (video.paused) video.play().catch(() => {});
+    video.muted = !video.muted;
+    if (btn) {
+      btn.classList.toggle('sonando', !video.muted);
+      btn.querySelector('.fs-txt').textContent = video.muted ? 'Sonido' : 'Silenciar';
+      btn.setAttribute('aria-label', video.muted ? 'Activar sonido' : 'Silenciar');
     }
-    frame.appendChild(el);
   }
-
-  frame.addEventListener('click', () => reproducir(false));
-  frame.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); reproducir(false); }
+  if (btn) btn.addEventListener('click', alternarSonido);
+  marco.addEventListener('click', alternarSonido);
+  marco.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') alternarSonido(e);
   });
-
-  // Arranque automático al entrar en pantalla, si está habilitado y hay video.
-  if (frame.dataset.autoplay === '1' && (frame.dataset.video || '').trim()) {
-    const io = new IntersectionObserver(es => {
-      es.forEach(en => { if (en.isIntersecting) { reproducir(true); io.disconnect(); } });
-    }, { threshold: 0.5 });
-    io.observe(frame);
-  }
 })();
 </script>
 <script>
