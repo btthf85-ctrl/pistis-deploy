@@ -2493,8 +2493,14 @@
         <div class="film reveal" id="comunidad" style="transition-delay: .18s;">
           <div class="film-frame" id="film-frame"
                role="button" tabindex="0" aria-label="Activar sonido del video de integrantes y comunidad">
-            <video id="film-video" class="film-video" muted loop playsinline preload="metadata"
-                   poster="com/comunidad.jpg" aria-hidden="true"></video>
+            <video id="film-video" class="film-video"
+                   autoplay muted loop playsinline preload="auto"
+                   poster="com/comunidad.jpg" aria-hidden="true">
+              <source src="com/comunidad.webm" type="video/webm">
+              <source src="com/comunidad.mp4" type="video/mp4">
+              <source src="comunidad.webm" type="video/webm">
+              <source src="comunidad.mp4" type="video/mp4">
+            </video>
             <button class="film-sound" id="film-sound" type="button" aria-label="Activar sonido">
               <span class="fs-ico" aria-hidden="true"></span><span class="fs-txt">Sonido</span>
             </button>
@@ -4561,9 +4567,10 @@
 <script>
 /* ══════════════════════════════════════════════════════════════
    PANEL · INTEGRANTES Y COMUNIDAD
-   El video corre en bucle, silenciado, en cuanto el panel entra
-   en pantalla. Los subtítulos van quemados, así que comunica sin
-   audio. Un clic activa el sonido.
+   El video se reproduce en bucle por HTML nativo (autoplay muted
+   loop). Este script solo añade el botón de sonido y avisa por
+   consola si algo falla. Si el video no carga, queda el póster:
+   nunca se ve roto.
    ══════════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
@@ -4573,63 +4580,55 @@
   const btn    = document.getElementById('film-sound');
   if (!marco || !video) return;
 
-  const prueba = document.createElement('video');
-  const archivo = prueba.canPlayType('video/webm; codecs="vp9"')
-                  ? 'comunidad.webm' : 'comunidad.mp4';
-  const RUTAS = ['com/', 'video/', 'vid/', 'assets/', ''];
-  let arrancado = false;
-
-  function arrancar(ruta) {
-    video.src = ruta + archivo;
-    video.load();
-    video.addEventListener('canplay', () => {
-      video.play().then(() => {
-        video.classList.add('on');
-        if (poster) poster.style.opacity = '0';
-        if (btn) btn.classList.add('on');
-        console.info('[PSC] Video de comunidad en bucle ·', ruta + archivo);
-      }).catch(() => {
-        /* Si el navegador bloquea el arranque, se queda el póster y el botón */
-        if (btn) { btn.classList.add('on'); btn.querySelector('.fs-txt').textContent = 'Reproducir'; }
-      });
-    }, { once: true });
+  function mostrar() {
+    if (video.classList.contains('on')) return;
+    video.classList.add('on');
+    if (poster) poster.style.opacity = '0';
+    if (btn) btn.classList.add('on');
+    console.info('[PSC] Video de comunidad reproduciendo ·', video.currentSrc || '(sin origen)');
   }
 
-  /* Solo carga cuando el panel está por entrar en pantalla */
-  const io = new IntersectionObserver(es => {
-    es.forEach(e => {
-      if (e.isIntersecting && !arrancado) {
-        arrancado = true;
-        io.disconnect();
-        (function localizar(k) {
-          if (k >= RUTAS.length) {
-            console.warn('[PSC] No encontré', archivo, '· rutas probadas:', RUTAS.join(' , '));
-            return;
-          }
-          fetch(RUTAS[k] + archivo, { method: 'HEAD' })
-            .then(r => r.ok ? arrancar(RUTAS[k]) : localizar(k + 1))
-            .catch(() => localizar(k + 1));
-        })(0);
+  video.addEventListener('playing', mostrar);
+  video.addEventListener('loadeddata', () => {
+    /* Algunos navegadores no arrancan solos: se les insiste una vez */
+    video.play().then(mostrar).catch(() => {
+      console.warn('[PSC] El navegador bloqueó el arranque automático. Se muestra el botón.');
+      if (btn) {
+        btn.classList.add('on');
+        btn.querySelector('.fs-txt').textContent = 'Reproducir';
       }
     });
-  }, { rootMargin: '300px' });
-  io.observe(marco);
+  });
 
-  /* Sonido: un clic en el botón o en el marco */
-  function alternarSonido(e) {
+  video.addEventListener('error', () => {
+    console.error('[PSC] No se pudo cargar el video de comunidad.',
+      'Verifica que exista https://pistissophiacore.com/com/comunidad.mp4');
+  });
+
+  /* Diagnóstico manual desde la consola: PSCvideo() */
+  window.PSCvideo = () => ({
+    origen: video.currentSrc || null,
+    estadoRed: ['SIN ORIGEN','CARGANDO','OK','SIN DATOS'][video.networkState],
+    listo: video.readyState,
+    reproduciendo: !video.paused,
+    silenciado: video.muted,
+    error: video.error ? video.error.message || video.error.code : null
+  });
+
+  /* Sonido */
+  function alternar(e) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
-    if (video.paused) video.play().catch(() => {});
+    if (video.paused) video.play().then(mostrar).catch(() => {});
     video.muted = !video.muted;
     if (btn) {
       btn.classList.toggle('sonando', !video.muted);
       btn.querySelector('.fs-txt').textContent = video.muted ? 'Sonido' : 'Silenciar';
-      btn.setAttribute('aria-label', video.muted ? 'Activar sonido' : 'Silenciar');
     }
   }
-  if (btn) btn.addEventListener('click', alternarSonido);
-  marco.addEventListener('click', alternarSonido);
+  if (btn) btn.addEventListener('click', alternar);
+  marco.addEventListener('click', alternar);
   marco.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') alternarSonido(e);
+    if (e.key === 'Enter' || e.key === ' ') alternar(e);
   });
 })();
 </script>
