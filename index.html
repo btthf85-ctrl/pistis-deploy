@@ -2825,7 +2825,39 @@
           Cinco etapas. Ocho semanas promedio. Una operación que aprende sola.
           EVO integra gobernanza, automatización y posicionamiento en una sola línea de tiempo auditable.
         </p>
-      </div>
+      
+        <!-- ── PANEL · DEL CAOS AL SISTEMA ── -->
+        <div class="film reveal" id="proceso" style="transition-delay:.26s; margin-top:2rem;">
+          <div class="film-frame" id="proc-frame"
+               role="button" tabindex="0" aria-label="Video del método EVO">
+            <video id="proc-video" class="film-video"
+                   autoplay muted loop playsinline preload="auto"
+                   poster="evo/proceso.jpg" aria-hidden="true">
+              <source src="evo/proceso.webm" type="video/webm">
+              <source src="evo/proceso.mp4" type="video/mp4">
+              <source src="proceso.webm" type="video/webm">
+              <source src="proceso.mp4" type="video/mp4">
+            </video>
+            <span class="film-cnr tl"></span><span class="film-cnr tr"></span>
+            <span class="film-cnr bl"></span><span class="film-cnr br"></span>
+            <div class="film-grid" aria-hidden="true"></div>
+            <div class="film-play" id="proc-play">
+              <span class="film-orb">
+                <svg class="film-dia" viewBox="0 0 54 54" aria-hidden="true">
+                  <defs><linearGradient id="procG" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#f0c244"/><stop offset="100%" stop-color="#a855f7"/>
+                  </linearGradient></defs>
+                  <path d="M27 3 L51 27 L27 51 L3 27 Z" fill="none" stroke="url(#procG)" stroke-width="1.2"/>
+                  <path d="M27 14 L40 27 L27 40 L14 27 Z" fill="url(#procG)" opacity=".92"/>
+                </svg>
+                <i class="film-tri" aria-hidden="true"></i>
+              </span>
+              <span class="film-lbl">Del caos al sistema</span>
+            </div>
+            <span class="film-tag">PSC · 03</span>
+          </div>
+        </div>
+</div>
       <div class="evo-stages">
         <div class="evo-stage reveal" style="transition-delay:.1s;">
           <div>
@@ -4566,70 +4598,96 @@
 </script>
 <script>
 /* ══════════════════════════════════════════════════════════════
-   PANEL · INTEGRANTES Y COMUNIDAD
-   El video se reproduce en bucle por HTML nativo (autoplay muted
-   loop). Este script solo añade el botón de sonido y avisa por
-   consola si algo falla. Si el video no carga, queda el póster:
-   nunca se ve roto.
+   PANELES DE VIDEO · PISTIS SOPHIA CORE
+   Reproducción nativa en bucle (autoplay muted loop). Este script
+   añade el botón de sonido y — importante para móvil — PAUSA todos
+   los videos cuando la pestaña deja de estar visible, para que nada
+   siga sonando ni gastando batería en segundo plano.
    ══════════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
-  const marco  = document.getElementById('film-frame');
-  const video  = document.getElementById('film-video');
-  const poster = document.getElementById('film-play');
-  const btn    = document.getElementById('film-sound');
-  if (!marco || !video) return;
 
-  function mostrar() {
-    if (video.classList.contains('on')) return;
-    video.classList.add('on');
-    if (poster) poster.style.opacity = '0';
-    if (btn) btn.classList.add('on');
-    console.info('[PSC] Video de comunidad reproduciendo ·', video.currentSrc || '(sin origen)');
-  }
+  const paneles = [
+    { marco: 'film-frame', video: 'film-video', poster: 'film-play', btn: 'film-sound', sonido: true  },
+    { marco: 'proc-frame', video: 'proc-video', poster: 'proc-play', btn: null,         sonido: false }
+  ];
+  const videos = [];
 
-  video.addEventListener('playing', mostrar);
-  video.addEventListener('loadeddata', () => {
-    /* Algunos navegadores no arrancan solos: se les insiste una vez */
-    video.play().then(mostrar).catch(() => {
-      console.warn('[PSC] El navegador bloqueó el arranque automático. Se muestra el botón.');
-      if (btn) {
-        btn.classList.add('on');
-        btn.querySelector('.fs-txt').textContent = 'Reproducir';
-      }
+  paneles.forEach(cfg => {
+    const marco  = document.getElementById(cfg.marco);
+    const video  = document.getElementById(cfg.video);
+    const poster = document.getElementById(cfg.poster);
+    const btn    = cfg.btn ? document.getElementById(cfg.btn) : null;
+    if (!marco || !video) return;
+    videos.push(video);
+
+    const mostrar = () => {
+      if (video.classList.contains('on')) return;
+      video.classList.add('on');
+      if (poster) poster.style.opacity = '0';
+      if (btn) btn.classList.add('on');
+      console.info('[PSC] Reproduciendo ·', video.currentSrc || '(sin origen)');
+    };
+
+    video.addEventListener('playing', mostrar);
+    video.addEventListener('loadeddata', () => {
+      video.play().then(mostrar).catch(() => {
+        console.warn('[PSC] Arranque automático bloqueado en', cfg.video);
+        if (btn) { btn.classList.add('on'); btn.querySelector('.fs-txt').textContent = 'Reproducir'; }
+      });
     });
-  });
+    video.addEventListener('error', () => {
+      console.error('[PSC] No cargó el video de', cfg.marco, '· revisa la ruta de los archivos.');
+    });
 
-  video.addEventListener('error', () => {
-    console.error('[PSC] No se pudo cargar el video de comunidad.',
-      'Verifica que exista https://pistissophiacore.com/com/comunidad.mp4');
-  });
-
-  /* Diagnóstico manual desde la consola: PSCvideo() */
-  window.PSCvideo = () => ({
-    origen: video.currentSrc || null,
-    estadoRed: ['SIN ORIGEN','CARGANDO','OK','SIN DATOS'][video.networkState],
-    listo: video.readyState,
-    reproduciendo: !video.paused,
-    silenciado: video.muted,
-    error: video.error ? video.error.message || video.error.code : null
-  });
-
-  /* Sonido */
-  function alternar(e) {
-    if (e) { e.preventDefault(); e.stopPropagation(); }
-    if (video.paused) video.play().then(mostrar).catch(() => {});
-    video.muted = !video.muted;
-    if (btn) {
-      btn.classList.toggle('sonando', !video.muted);
-      btn.querySelector('.fs-txt').textContent = video.muted ? 'Sonido' : 'Silenciar';
+    if (cfg.sonido) {
+      const alternar = e => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        if (video.paused) video.play().then(mostrar).catch(() => {});
+        video.muted = !video.muted;
+        if (btn) {
+          btn.classList.toggle('sonando', !video.muted);
+          btn.querySelector('.fs-txt').textContent = video.muted ? 'Sonido' : 'Silenciar';
+        }
+      };
+      if (btn) btn.addEventListener('click', alternar);
+      marco.addEventListener('click', alternar);
+      marco.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') alternar(e);
+      });
     }
-  }
-  if (btn) btn.addEventListener('click', alternar);
-  marco.addEventListener('click', alternar);
-  marco.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') alternar(e);
   });
+
+  /* ── Pausa al salir de la página ──────────────────────────────
+     Resuelve que el video siga sonando al minimizar en el teléfono.
+     Se recuerda cuáles estaban corriendo para reanudarlos al volver. */
+  const fondo = document.querySelector('.sf-layer .sf-img');
+  const todos = fondo ? videos.concat([fondo]) : videos;
+  let enPausa = [];
+
+  function alOcultar() {
+    enPausa = todos.filter(v => !v.paused);
+    enPausa.forEach(v => v.pause());
+  }
+  function alVolver() {
+    enPausa.forEach(v => v.play().catch(() => {}));
+    enPausa = [];
+  }
+  document.addEventListener('visibilitychange', () => {
+    document.hidden ? alOcultar() : alVolver();
+  });
+  /* Safari en iOS no siempre dispara visibilitychange al bloquear */
+  window.addEventListener('pagehide', alOcultar);
+  window.addEventListener('blur', alOcultar);
+  window.addEventListener('pageshow', alVolver);
+  window.addEventListener('focus', alVolver);
+
+  window.PSCvideo = () => todos.map(v => ({
+    id: v.id || 'fondo',
+    origen: (v.currentSrc || '').split('/').slice(-2).join('/') || null,
+    reproduciendo: !v.paused, silenciado: v.muted,
+    error: v.error ? v.error.code : null
+  }));
 })();
 </script>
 <script>
