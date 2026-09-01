@@ -143,8 +143,8 @@
      Vive DENTRO de #hero y #servicios, en un contexto aislado,
      para no competir con el apilamiento global de la página.
      ───────────────────────────────────────────────────────── */
-  #hero, #servicios { isolation: isolate; }
-  #hero > .container, #servicios > .container { position: relative; z-index: 2; }
+  #hero, #servicios, #evo { isolation: isolate; }
+  #hero > .container, #servicios > .container, #evo > .container { position: relative; z-index: 2; }
 
   .sf-layer {
     position: fixed; inset: 0; z-index: 0;
@@ -166,6 +166,15 @@
   @media (max-width: 820px) {
     .sf-veil { background:
       linear-gradient(180deg, rgba(5,3,22,.80) 0%, rgba(5,3,22,.58) 45%, rgba(5,3,22,.84) 100%); }
+  }
+  .sf-layer.sf-b .sf-veil {
+    background:
+      linear-gradient(100deg, rgba(5,3,22,.92) 0%, rgba(5,3,22,.86) 40%, rgba(5,3,22,.74) 72%, rgba(5,3,22,.70) 100%),
+      linear-gradient(180deg, rgba(5,3,22,.72) 0%, rgba(5,3,22,.52) 45%, rgba(5,3,22,.80) 100%);
+  }
+  @media (max-width: 820px) {
+    .sf-layer.sf-b .sf-veil { background:
+      linear-gradient(180deg, rgba(5,3,22,.86) 0%, rgba(5,3,22,.70) 45%, rgba(5,3,22,.88) 100%); }
   }
   @media (prefers-reduced-motion: reduce) { .sf-layer { display: none; } }
 
@@ -2815,6 +2824,7 @@
      EVO PROTOCOL
      ══════════════════════════════════════════════════════════ -->
 <section id="evo">
+  <div class="sf-layer sf-b" data-sf="evo" aria-hidden="true"><video class="sf-img" muted loop playsinline preload="auto" poster="evo/proceso.jpg"><source src="evo/proceso.webm" type="video/webm"><source src="evo/proceso.mp4" type="video/mp4"><source src="proceso.webm" type="video/webm"><source src="proceso.mp4" type="video/mp4"></video><div class="sf-veil"></div></div>
   <div class="container">
     <div class="evo-grid">
       <div>
@@ -2826,38 +2836,6 @@
           EVO integra gobernanza, automatización y posicionamiento en una sola línea de tiempo auditable.
         </p>
       
-        <!-- ── PANEL · DEL CAOS AL SISTEMA ── -->
-        <div class="film reveal" id="proceso" style="transition-delay:.26s; margin-top:2rem;">
-          <div class="film-frame" id="proc-frame"
-               role="button" tabindex="0" aria-label="Video del método EVO">
-            <video id="proc-video" class="film-video"
-                   autoplay muted loop playsinline preload="auto"
-                   poster="evo/proceso.jpg" aria-hidden="true">
-              <source src="evo/proceso.webm" type="video/webm">
-              <source src="evo/proceso.mp4" type="video/mp4">
-              <source src="proceso.webm" type="video/webm">
-              <source src="proceso.mp4" type="video/mp4">
-            </video>
-            <span class="film-cnr tl"></span><span class="film-cnr tr"></span>
-            <span class="film-cnr bl"></span><span class="film-cnr br"></span>
-            <div class="film-grid" aria-hidden="true"></div>
-            <div class="film-play" id="proc-play">
-              <span class="film-orb">
-                <svg class="film-dia" viewBox="0 0 54 54" aria-hidden="true">
-                  <defs><linearGradient id="procG" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#f0c244"/><stop offset="100%" stop-color="#a855f7"/>
-                  </linearGradient></defs>
-                  <path d="M27 3 L51 27 L27 51 L3 27 Z" fill="none" stroke="url(#procG)" stroke-width="1.2"/>
-                  <path d="M27 14 L40 27 L27 40 L14 27 Z" fill="url(#procG)" opacity=".92"/>
-                </svg>
-                <i class="film-tri" aria-hidden="true"></i>
-              </span>
-              <span class="film-lbl">Del caos al sistema</span>
-            </div>
-            <span class="film-tag">PSC · 03</span>
-          </div>
-        </div>
-</div>
       <div class="evo-stages">
         <div class="evo-stage reveal" style="transition-delay:.1s;">
           <div>
@@ -4608,8 +4586,7 @@
   'use strict';
 
   const paneles = [
-    { marco: 'film-frame', video: 'film-video', poster: 'film-play', btn: 'film-sound', sonido: true  },
-    { marco: 'proc-frame', video: 'proc-video', poster: 'proc-play', btn: null,         sonido: false }
+    { marco: 'film-frame', video: 'film-video', poster: 'film-play', btn: 'film-sound', sonido: true }
   ];
   const videos = [];
 
@@ -4661,8 +4638,8 @@
   /* ── Pausa al salir de la página ──────────────────────────────
      Resuelve que el video siga sonando al minimizar en el teléfono.
      Se recuerda cuáles estaban corriendo para reanudarlos al volver. */
-  const fondo = document.querySelector('.sf-layer .sf-img');
-  const todos = fondo ? videos.concat([fondo]) : videos;
+  const fondos = [...document.querySelectorAll('.sf-layer .sf-img')];
+  const todos = videos.concat(fondos);
   let enPausa = [];
 
   function alOcultar() {
@@ -4692,113 +4669,110 @@
 </script>
 <script>
 /* ══════════════════════════════════════════════════════════════
-   FONDO DE VIDEO · PISTIS SOPHIA CORE
+   FONDOS DE VIDEO · PISTIS SOPHIA CORE
 
-   MODO   'loop'   → el video se reproduce solo, continuo y fluido
-          'scroll' → el video avanza según el desplazamiento
-          'off'    → sin fondo de video (la página queda como antes)
+   Dos fondos que se relevan:
+     A · desde el inicio hasta el final de Servicios
+     B · desde El Método Propietario (EVO) hasta el final
 
-   Una sola capa fija: no hay cortes ni reinicios entre secciones.
+   MODO 'loop' reproduce continuo · 'off' desactiva ambos.
    ══════════════════════════════════════════════════════════════ */
 (() => {
   'use strict';
-  const MODO      = 'loop';
-  const INTENSIDAD = 1;      // 0 = invisible · 1 = normal · 1.4 = más presente
-  const SUAVIDAD  = 0.14;    // sólo aplica en modo 'scroll'
-
+  const MODO = 'loop';
+  const INTENSIDAD = 1;
   if (MODO === 'off') return;
-
-  const capa  = document.querySelector('.sf-layer');
-  const video = capa && capa.querySelector('.sf-img');
-  const hero  = document.getElementById('hero');
-  const serv  = document.getElementById('servicios');
-  if (!capa || !video || !hero || !serv) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const hero = document.getElementById('hero');
+  const serv = document.getElementById('servicios');
+  const evo  = document.getElementById('evo');
+  const capaA = document.querySelector('.sf-layer:not(.sf-b)');
+  const capaB = document.querySelector('.sf-layer.sf-b');
+  if (!hero || !serv || !evo) return;
 
   const movil = window.matchMedia('(max-width: 820px)').matches;
   const prueba = document.createElement('video');
-  const usaWebm = !movil && prueba.canPlayType('video/webm; codecs="vp9"');
-  const archivo = movil ? 'psc-bg-mobile.mp4' : (usaWebm ? 'psc-bg.webm' : 'psc-bg.mp4');
+  const usaWebm = prueba.canPlayType('video/webm; codecs="vp9"');
+
+  /* Fondo A: se le asigna el origen por JS (busca la carpeta) */
+  const vidA = capaA && capaA.querySelector('.sf-img');
+  const archivoA = movil ? 'psc-bg-mobile.mp4' : (usaWebm ? 'psc-bg.webm' : 'psc-bg.mp4');
   const RUTAS = ['vid/', 'video/', 'assets/vid/', 'assets/', ''];
 
-  let duracion = 0, objetivo = 0, actual = 0, listo = false;
-  const fin = () => serv.offsetTop + serv.offsetHeight;
+  /* Fondo B: ya trae sus <source> en el HTML */
+  const vidB = capaB && capaB.querySelector('.sf-img');
 
-  function progreso() {
-    const ini = hero.offsetTop;
-    const tope = fin() - window.innerHeight * 0.5;
-    return Math.min(1, Math.max(0, (window.scrollY - ini) / Math.max(1, tope - ini)));
-  }
+  const desvanecido = window.innerHeight * 0.6;
 
-  /* Se desvanece al salir de las dos primeras secciones */
-  function visibilidad() {
-    const limite = fin();
-    const margen = window.innerHeight * 0.6;
+  function opacidadA() {
+    if (!capaA) return;
+    const limite = serv.offsetTop + serv.offsetHeight;
     let v = 1;
-    if (window.scrollY > limite - margen) {
-      v = Math.max(0, 1 - (window.scrollY - (limite - margen)) / margen);
+    if (window.scrollY > limite - desvanecido) {
+      v = Math.max(0, 1 - (window.scrollY - (limite - desvanecido)) / desvanecido);
     }
-    capa.style.opacity = String(v * INTENSIDAD);
+    capaA.style.opacity = String(v * INTENSIDAD);
+  }
+  function opacidadB() {
+    if (!capaB) return;
+    const inicio = evo.offsetTop;
+    /* Entra en los últimos 60% de pantalla antes de llegar a EVO */
+    let v = (window.scrollY - (inicio - desvanecido)) / desvanecido;
+    v = Math.min(1, Math.max(0, v));
+    capaB.style.opacity = String(v * INTENSIDAD);
+  }
+  function actualizar() { opacidadA(); opacidadB(); }
+
+  function encender(capa, video) {
+    if (!capa || !video) return;
+    capa.classList.add('on');
+    video.muted = true; video.loop = true; video.playsInline = true;
+    const arranca = () => video.play().catch(() => {});
+    if (video.readyState >= 2) arranca();
+    else video.addEventListener('canplay', arranca, { once: true });
   }
 
-  function bucle() {
-    if (listo) {
-      visibilidad();
-      if (MODO === 'scroll' && duracion > 0) {
-        objetivo = progreso() * (duracion - 0.06);
-        actual += (objetivo - actual) * SUAVIDAD;
-        if (Math.abs(objetivo - actual) < 0.01) actual = objetivo;
-        if (!video.seeking && Math.abs(video.currentTime - actual) > 0.03) {
-          try { video.currentTime = actual; } catch (e) {}
-        }
+  /* Fondo A necesita localizar su archivo */
+  if (vidA) {
+    (function localizar(k) {
+      if (k >= RUTAS.length) {
+        console.warn('[PSC] Fondo A: no encontré', archivoA);
+        return;
       }
-    }
-    requestAnimationFrame(bucle);
+      fetch(RUTAS[k] + archivoA, { method: 'HEAD' })
+        .then(r => {
+          if (!r.ok) return localizar(k + 1);
+          vidA.src = RUTAS[k] + archivoA;
+          vidA.load();
+          encender(capaA, vidA);
+          console.info('[PSC] Fondo A ·', RUTAS[k] + archivoA);
+        })
+        .catch(() => localizar(k + 1));
+    })(0);
   }
 
-  function arrancar(ruta) {
-    const listoYa = () => {
-      if (listo) return;
-      duracion = video.duration || 10;
-      listo = true;
-      capa.classList.add('on');
-      visibilidad();
-      console.info('[PSC] Fondo de video · modo', MODO, '·', ruta + archivo);
-    };
-    video.addEventListener('loadedmetadata', listoYa);
-    video.addEventListener('loadeddata', listoYa);
-    video.addEventListener('canplay', listoYa);
-
-    video.muted = true;
-    video.playsInline = true;
-    if (MODO === 'loop') {
-      video.loop = true;
-      video.addEventListener('canplay', () => video.play().catch(() => {}), { once: true });
-    } else {
-      video.addEventListener('canplay', () => {
-        video.play().then(() => video.pause()).catch(() => {});
-      }, { once: true });
-    }
-
-    video.src = ruta + archivo;
-    video.load();
-    if (video.readyState >= 1) listoYa();
-    bucle();
+  /* Fondo B carga por HTML nativo */
+  if (vidB) {
+    vidB.addEventListener('loadeddata', () => {
+      encender(capaB, vidB);
+      console.info('[PSC] Fondo B ·', vidB.currentSrc);
+    });
+    vidB.addEventListener('error', () =>
+      console.error('[PSC] Fondo B: no cargó · revisa evo/proceso.mp4'));
+    if (vidB.readyState >= 2) encender(capaB, vidB);
   }
 
-  (function localizar(k) {
-    if (k >= RUTAS.length) {
-      console.warn('[PSC] No encontré', archivo, '· rutas probadas:', RUTAS.join(' , '));
-      return;
-    }
-    fetch(RUTAS[k] + archivo, { method: 'HEAD' })
-      .then(r => r.ok ? arrancar(RUTAS[k]) : localizar(k + 1))
-      .catch(() => localizar(k + 1));
-  })(0);
+  actualizar();
+  addEventListener('scroll', actualizar, { passive: true });
+  addEventListener('resize', actualizar, { passive: true });
 
-  addEventListener('scroll', visibilidad, { passive: true });
-  window.PSCfilm = () => ({ MODO, listo, duracion, progreso: progreso(),
-                            t: video.currentTime, opacidad: capa.style.opacity });
+  window.PSCfondos = () => [['A', capaA, vidA], ['B', capaB, vidB]].map(([n, c, v]) => ({
+    fondo: n,
+    origen: v ? (v.currentSrc || '').split('/').slice(-2).join('/') : null,
+    reproduciendo: v ? !v.paused : null,
+    opacidad: c ? c.style.opacity : null
+  }));
 })();
 </script>
 </body>
